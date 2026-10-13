@@ -1,0 +1,80 @@
+name: Produksi video 1Hertz
+
+on:
+  schedule:
+    # tiap 5 menit, di menit 3, 8, 13, ... (menghindari awal jam yang ramai)
+    - cron: '3-58/5 * * * *'
+  workflow_dispatch: {}   # tombol "Run workflow" manual (bisa dari aplikasi GitHub di HP)
+
+# satu produksi dalam satu waktu; jadwal berikutnya menunggu, tidak dibatalkan
+concurrency:
+  group: produksi-1hertz
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # untuk mencatat log/riwayat.md ke repo
+
+jobs:
+  produksi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      RENDER_CONCURRENCY: '4'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cek antrian Drive
+        id: cek
+        run: node pipeline/gh-runner.js cek
+
+      - name: Font (Inter, JetBrains Mono, emoji)
+        if: steps.cek.outputs.ada == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-inter fonts-jetbrains-mono fonts-noto-color-emoji > /dev/null
+
+      - name: Cache Remotion (node_modules + browser)
+        if: steps.cek.outputs.ada == 'true'
+        uses: actions/cache@v4
+        with:
+          path: remotion/node_modules
+          key: remotion-${{ runner.os }}-${{ hashFiles('remotion/package-lock.json') }}
+
+      - name: Pasang Remotion
+        if: steps.cek.outputs.ada == 'true'
+        working-directory: remotion
+        run: |
+          [ -d node_modules ] || npm ci --no-audit --no-fund
+          npx remotion browser ensure
+
+      - name: Produksi (TTS → render → upload YouTube privat)
+        if: steps.cek.outputs.ada == 'true'
+        run: node pipeline/gh-runner.js proses
+
+      - name: Simpan video sebagai artifact (3 hari, untuk dicek tanpa buka YouTube)
+        if: always() && steps.cek.outputs.ada == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-1hertz-${{ github.run_number }}
+          path: hasil/*.mp4
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Simpan log riwayat
+        if: always() && steps.cek.outputs.ada == 'true'
+        run: |
+          if [ -n "$(git status --porcelain log)" ]; then
+            git config user.name "1hertz-bot"
+            git config user.email "1hertz-bot@users.noreply.github.com"
+            git add log/riwayat.md
+            git commit -m "log: produksi $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+          fi

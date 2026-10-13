@@ -1,0 +1,16 @@
+{
+  "name": "remotion-1hertz",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Template video Shorts 1Hertz yang membaca JSON konten",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render src/index.tsx Short1Hertz out/video.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.528",
+    "remotion": "4.0.528",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  }
+}

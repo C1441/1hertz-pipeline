@@ -1,0 +1,129 @@
+{
+  "versi_skema": "1.0",
+  "id": "2026-10-13-delay-vs-millis",
+  "dibuat": "2026-10-13T12:00:00+07:00",
+  "tema": "delay() vs millis() di Arduino/ESP32",
+  "status": "siap_produksi",
+
+  "kelayakan": {
+    "faktor": {
+      "permintaan": 5,
+      "persaingan": 3,
+      "celah": 4,
+      "bisa_divisualkan": 5,
+      "cocok_channel": 5,
+      "umur_topik": 5,
+      "risiko_rendah": 5
+    },
+    "skor_total": 32,
+    "skor_maks": 35,
+    "keputusan": "lanjut",
+    "alasan": "Kebingungan dasar yang terus dicari pemula. Video Indonesia yang ada kebanyakan panjang dan menjelaskan lewat kode saja, jarang menunjukkan efek 'macet' secara visual."
+  },
+
+  "strategi": {
+    "pilar": "x_vs_y",
+    "seri": "B",
+    "target_penonton": "Pemula Arduino/ESP32 yang programnya terasa macet saat membaca tombol atau sensor",
+    "angle": "delay() itu bikin Arduino 'tidur', millis() bikin Arduino 'lihat jam'",
+    "takeaway": "Pakai millis() kalau programmu harus mengerjakan lebih dari satu hal sekaligus.",
+    "ide_lanjutan": ["Kenapa millis() bisa overflow setelah 49 hari?", "Cara bikin 2 LED kedip beda kecepatan tanpa delay()"]
+  },
+
+  "naskah": {
+    "voiceover_lengkap": "Tombolmu kadang nggak kebaca? Bisa jadi gara-gara delay. Waktu delay jalan, Arduino berhenti total, nggak ngecek apa pun. Millis beda. Dia cuma ngasih tahu sudah berapa milidetik sejak board nyala. Jadi kamu tinggal cek, sudah lewat satu detik belum? Kalau sudah, kedipkan LED. Kalau belum, lanjut kerjain yang lain, misalnya baca tombol. Hasilnya, LED tetap kedip, tombol tetap responsif. Satu aturan: kalau programmu harus ngerjain lebih dari satu hal, tinggalin delay, pakai millis. Mau versi dua LED beda kecepatan? Tulis di komentar.",
+    "jumlah_kata": 82,
+    "durasi_detik": 38
+  },
+
+  "adegan": [
+    {
+      "no": 1, "mulai": 0.0, "selesai": 3.0,
+      "voiceover": "Tombolmu kadang nggak kebaca? Bisa jadi gara-gara delay.",
+      "teks_layar": "Tombol nggak kebaca?",
+      "kata_kunci": "delay",
+      "komponen": "kartu_status",
+      "data": { "label": "BUTTON", "urutan_status": ["PRESSED", "IGNORED"], "warna": ["hijau", "merah"] }
+    },
+    {
+      "no": 2, "mulai": 3.0, "selesai": 9.0,
+      "voiceover": "Waktu delay jalan, Arduino berhenti total, nggak ngecek apa pun.",
+      "teks_layar": "delay() = Arduino tidur",
+      "kata_kunci": "berhenti",
+      "komponen": "kartu_kode",
+      "data": { "bahasa": "cpp", "kode": "digitalWrite(LED, HIGH);\ndelay(1000); // semua berhenti di sini\ndigitalWrite(LED, LOW);", "sorot_baris": [2] }
+    },
+    {
+      "no": 3, "mulai": 9.0, "selesai": 15.0,
+      "voiceover": "Millis beda. Dia cuma ngasih tahu sudah berapa milidetik sejak board nyala.",
+      "teks_layar": "millis() = lihat jam",
+      "kata_kunci": "millis",
+      "komponen": "x_vs_y",
+      "data": { "kiri": { "judul": "delay()", "poin": ["Menunggu", "Program berhenti"] }, "kanan": { "judul": "millis()", "poin": ["Mengecek waktu", "Program jalan terus"] } }
+    },
+    {
+      "no": 4, "mulai": 15.0, "selesai": 24.0,
+      "voiceover": "Jadi kamu tinggal cek, sudah lewat satu detik belum? Kalau sudah, kedipkan LED. Kalau belum, lanjut kerjain yang lain, misalnya baca tombol.",
+      "teks_layar": "Cek waktu, bukan menunggu",
+      "kata_kunci": "cek",
+      "komponen": "kartu_kode",
+      "data": { "bahasa": "cpp", "kode": "if (millis() - terakhir >= 1000) {\n  terakhir = millis();\n  toggleLED();\n}\nbacaTombol(); // tetap jalan", "sorot_baris": [1, 5] }
+    },
+    {
+      "no": 5, "mulai": 24.0, "selesai": 30.0,
+      "voiceover": "Hasilnya, LED tetap kedip, tombol tetap responsif.",
+      "teks_layar": "LED kedip + tombol responsif",
+      "kata_kunci": "responsif",
+      "komponen": "bukti_asli",
+      "data": { "nama_file": "aset/delay-vs-millis-demo.mp4", "cadangan": "kartu_status", "keterangan": "Rekaman board: LED kedip sambil tombol ditekan" }
+    },
+    {
+      "no": 6, "mulai": 30.0, "selesai": 35.0,
+      "voiceover": "Satu aturan: kalau programmu harus ngerjain lebih dari satu hal, tinggalin delay, pakai millis.",
+      "teks_layar": "Lebih dari 1 tugas? Pakai millis()",
+      "kata_kunci": "millis",
+      "komponen": "kartu_solusi",
+      "data": { "teks": "Lebih dari satu tugas → millis()" }
+    },
+    {
+      "no": 7, "mulai": 35.0, "selesai": 38.0,
+      "voiceover": "Mau versi dua LED beda kecepatan? Tulis di komentar.",
+      "teks_layar": "Tulis di komentar 👇",
+      "kata_kunci": "komentar",
+      "komponen": "cta",
+      "data": { "teks": "Mau versi 2 LED beda kecepatan?" }
+    }
+  ],
+
+  "aset_dibutuhkan": [
+    { "jenis": "rekaman_asli", "nama_file": "delay-vs-millis-demo.mp4", "deskripsi": "5 detik, vertikal, close-up board + LED kedip, tangan menekan tombol", "wajib": false }
+  ],
+
+  "publikasi": {
+    "judul": "delay() vs millis(): kenapa tombolmu nggak kebaca",
+    "opsi_judul": [
+      "delay() vs millis(): kenapa tombolmu nggak kebaca",
+      "Stop pakai delay() di Arduino",
+      "Arduino-mu ketiduran gara-gara delay()",
+      "millis() itu apa sih?",
+      "1 alasan program Arduino terasa macet"
+    ],
+    "deskripsi": "delay() bikin Arduino berhenti total, millis() bikin program tetap jalan. Penjelasan singkat plus contoh kode untuk Arduino dan ESP32.",
+    "hashtag_youtube": ["#shorts", "#arduino", "#esp32", "#ApaItu1Hertz"],
+    "caption_tiktok": "Program Arduino-mu kerasa macet? Bisa jadi ini sebabnya. Kamu masih pakai delay()?",
+    "hashtag_tiktok": ["#arduino", "#esp32", "#belajararduino", "#iotindonesia"],
+    "teks_cover": "delay() vs millis()?",
+    "pinned_comment": "Kode lengkap contoh millis() mau aku taruh di sini? Komen 'mau'."
+  },
+
+  "qa": {
+    "skor": { "hook": 8, "kejelasan": 9, "akurasi": 9, "kemudahan_produksi": 9, "potensi_share": 7 },
+    "perlu_dicek": [],
+    "risiko": ["Tanpa rekaman asli, adegan 5 memakai kartu_status sebagai cadangan."]
+  },
+
+  "sumber": [
+    { "judul": "Arduino Reference: delay()", "url": "https://docs.arduino.cc/language-reference/en/functions/time/delay/" },
+    { "judul": "Arduino Reference: millis()", "url": "https://docs.arduino.cc/language-reference/en/functions/time/millis/" }
+  ]
+}
