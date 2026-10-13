@@ -23,6 +23,8 @@ const URL_UPLOAD = process.env.GOOGLE_UPLOAD_URL || 'https://www.googleapis.com/
 const MAKS_VIDEO = Number(process.env.MAKS_VIDEO || 2);
 
 const log = (...a) => console.log('[runner]', ...a);
+// pesan error terlihat di ringkasan run GitHub (anotasi); tidak pernah berisi rahasia
+const galat = (m) => { if (process.env.GITHUB_ACTIONS) console.log(`::error title=1Hertz::${String(m).replace(/[\r\n]+/g, ' ').slice(0, 500)}`); };
 const wajib = (n) => { const v = (process.env[n] || '').trim(); if (!v) throw new Error(`Secret ${n} belum diisi`); return v; };
 
 async function aksesToken() {
@@ -145,7 +147,7 @@ async function modeProses() {
     const fileVideo = path.join(AKAR, 'hasil', `${v.id}.mp4`);
     if (p.status !== 0 || !fs.existsSync(fileVideo)) {
       const alasan = (((p.stdout || '') + (p.stderr || '')).match(/GAGAL=(.*)/) || [])[1] || `kode ${p.status}`;
-      log('produksi gagal:', alasan);
+      log('produksi gagal:', alasan); galat('produksi gagal: ' + alasan);
       await pindah(token, f.id, 'gagal'); catat(`| ${waktu} | ${f.name} | gagal produksi | - | ${alasan.slice(0, 120).replace(/\|/g, '/')} |`); gagalAda = true; continue;
     }
     const menit = ((Date.now() - mulai) / 60000).toFixed(1);
@@ -157,7 +159,7 @@ async function modeProses() {
       catat(`| ${waktu} | ${f.name} | privat ✅ | ${idYt} | produksi ${menit} menit |`);
       keluaran('video_terakhir', idYt);
     } catch (e) {
-      log('upload gagal:', e.message);
+      log('upload gagal:', e.message); galat('upload gagal: ' + e.message);
       // Pindah ke "gagal" (bukan dicoba ulang otomatis) supaya kuota TTS tidak habis oleh percobaan berulang.
       // Setelah masalahnya beres, salin file dari "gagal" ke "antrian" untuk mencoba lagi.
       await pindah(token, f.id, 'gagal').catch(() => {});
@@ -169,4 +171,4 @@ async function modeProses() {
 
 const mode = process.argv[2];
 (mode === 'cek' ? modeCek() : mode === 'proses' ? modeProses() : Promise.reject(new Error('mode: cek | proses')))
-  .catch((e) => { console.error('[runner] ERROR:', e.message); process.exit(1); });
+  .catch((e) => { console.error('[runner] ERROR:', e.message); galat(e.message); process.exit(1); });
