@@ -99,6 +99,13 @@ function keluaran(nama, nilai) {
 }
 
 async function modeCek() {
+  const kurang = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN', 'GEMINI_API_KEY'].filter((n) => !(process.env[n] || '').trim());
+  if (kurang.length) {
+    // belum disetel: lewati dengan tenang (tanpa run merah / email tiap 5 menit)
+    log(`secrets belum lengkap (${kurang.join(', ')}), produksi dilewati`);
+    keluaran('ada', 'false');
+    return;
+  }
   const token = await aksesToken();
   const files = await daftarAntrian(token);
   log(`antrian: ${files.length} file`);
