@@ -28,6 +28,8 @@ export const KomponenAdegan: React.FC<{ komponen: string; data: any; dur: number
       return <Ilustrasi data={data} dur={dur} />;
     case 'cta':
       return <Cta data={data} dur={dur} />;
+    case 'log_serial':
+      return <LogSerial data={data} dur={dur} />;
     default:
       return <KartuPesan data={{ teks: data?.teks ?? komponen }} dur={dur} jenis="solusi" />;
   }
@@ -44,8 +46,21 @@ export function jadwalSfxKomponen(komponen: string, data: any, dur: number): { s
     urutan.forEach((_, i) => out.push({ src: warna[i] === 'merah' ? 'sfx/glitch.wav' : 'sfx/beep.wav', frame: Math.round(i * per) + 2, vol: 0.28 }));
   } else if (komponen === 'kartu_kode') {
     const baris: string[] = String(data.kode ?? '').split('\n');
+    const baru: number[] = data.baris_baru ?? [];
     const jeda = Math.min(10, (dur * 0.5) / Math.max(1, baris.length));
-    baris.forEach((b, i) => { if (b.trim()) out.push({ src: 'sfx/klik.wav', frame: Math.round(i * jeda) + 1, vol: 0.3 }); });
+    baris.forEach((b, i) => { if (b.trim() && !baru.includes(i + 1)) out.push({ src: 'sfx/klik.wav', frame: Math.round(i * jeda) + 1, vol: 0.3 }); });
+    if (baru.length) {
+      const t0 = Math.round(dur * 0.35);
+      const n = Math.max(...baru.map((b) => (baris[b - 1] ?? '').trim().length));
+      for (let c = 0; c < n; c += 2) out.push({ src: 'sfx/klik.wav', frame: t0 + c, vol: 0.22 });
+      out.push({ src: 'sfx/ding.wav', frame: t0 + n + 2, vol: 0.3 });
+    }
+  } else if (komponen === 'log_serial') {
+    const baris: string[] = data.baris ?? [];
+    const sorot: number[] = data.sorot ?? [];
+    const jeda = Math.min(7, (dur * 0.45) / Math.max(1, baris.length));
+    baris.forEach((_, i) => out.push({ src: sorot.includes(i + 1) && data.error ? 'sfx/glitch.wav' : 'sfx/klik.wav', frame: Math.round(i * jeda) + 1, vol: sorot.includes(i + 1) ? 0.26 : 0.18 }));
+    if (data.error) out.push({ src: 'sfx/buzz.wav', frame: Math.round(baris.length * jeda) + 2, vol: 0.24 });
   } else if (komponen === 'x_vs_y') {
     out.push({ src: 'sfx/pop.wav', frame: 2, vol: 0.22 }, { src: 'sfx/pop.wav', frame: 10, vol: 0.22 }, { src: 'sfx/beep.wav', frame: 16, vol: 0.22 });
   } else if (komponen === 'kartu_masalah') {
@@ -139,9 +154,11 @@ const KartuKode: React.FC<P> = ({ data, dur }) => {
   const frame = useCurrentFrame();
   const baris: string[] = String(data.kode ?? '').split('\n');
   const sorot: number[] = data.sorot_baris ?? [];
+  const baru: number[] = data.baris_baru ?? [];
   const jedaBaris = Math.min(10, (dur * 0.5) / Math.max(1, baris.length));
+  const t0Baru = Math.round(dur * 0.35);
   return (
-    <Panel>
+    <Panel garis={baru.length && frame > t0Baru ? C.ok : C.border}>
       <div style={{ display: 'flex', gap: 14, marginBottom: 30 }}>
         {[C.err, C.warn, C.ok].map((c) => (
           <div key={c} style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: c, opacity: 0.8 }} />
@@ -155,6 +172,22 @@ const KartuKode: React.FC<P> = ({ data, dur }) => {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         });
+        const isBaru = baru.includes(i + 1);
+        if (isBaru) {
+          const teksB = b;
+          const indent = teksB.length - teksB.trimStart().length;
+          const n = Math.max(0, Math.floor((frame - t0Baru) / 1));
+          if (frame < t0Baru) return <div key={i} style={{ height: 0, overflow: 'hidden' }} />;
+          const tinggi = interpolate(frame, [t0Baru, t0Baru + 5], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+          const selesai = n >= teksB.trim().length;
+          const kilau = selesai ? 0.18 + 0.12 * (0.5 + 0.5 * Math.sin(frame / 5)) : 0.22;
+          return (
+            <div key={i} style={{ maxHeight: tinggi * 70, overflow: 'hidden', fontFamily: FONT.mono, fontVariantLigatures: 'none', fontSize: 37, lineHeight: 1.6, whiteSpace: 'pre-wrap', color: C.text, backgroundColor: `rgba(61,220,151,${kilau.toFixed(3)})`, borderLeft: `6px solid ${C.ok}`, paddingLeft: 18 }}>
+              <span style={{ color: C.ok, fontWeight: 700 }}>+</span>{teksB.slice(1, indent)}{teksB.trim().slice(0, n)}
+              {!selesai ? <span style={{ color: C.ok }}>▌</span> : null}
+            </div>
+          );
+        }
         const disorot = sorot.includes(i + 1) && frame > i * jedaBaris + 10;
         const denyut = disorot ? 0.12 + 0.1 * (0.5 + 0.5 * Math.sin(frame / 6)) : 0;
         const terakhir = frame >= i * jedaBaris && (i === baris.length - 1 || frame < (i + 1) * jedaBaris);
@@ -275,11 +308,17 @@ const Diagram: React.FC<P> = ({ data, dur }) => {
         const terakhir = i === n - 1;
         return (
           <React.Fragment key={i}>
-            {i > 0 && <div style={{ fontSize: ukuran.panah, lineHeight: 1, color: C.signal, opacity: o }}>↓</div>}
+            {i > 0 && (
+              <div style={{ position: 'relative', height: ukuran.panah + 6, width: 40, opacity: o }}>
+                <div style={{ position: 'absolute', left: 18, top: 0, width: 4, height: '100%', backgroundColor: `${C.signal}55` }} />
+                <div style={{ position: 'absolute', left: 12, top: ((frame * 2.2 + i * 9) % (ukuran.panah + 6)) - 8, width: 16, height: 16, borderRadius: 8, backgroundColor: C.signal, boxShadow: `0 0 14px ${C.signal}` }} />
+              </div>
+            )}
             <div
               style={{
                 opacity: o,
-                transform: `scale(${0.92 + 0.08 * o})`,
+                transform: `scale(${0.92 + 0.08 * o + (o < 1 ? 0.06 * Math.sin(o * Math.PI) : 0)})`,
+                boxShadow: o > 0 && frame - i * jeda < 14 ? `0 0 ${30 - (frame - i * jeda) * 2}px ${terakhir ? C.amber : C.signal}` : 'none',
                 minWidth: 520,
                 textAlign: 'center',
                 padding: ukuran.pad,
@@ -360,5 +399,41 @@ const Cta: React.FC<P> = ({ data }) => {
       </Panel>
       <div style={{ fontSize: 110, marginTop: 30, transform: `translateY(${pantul}px)` }}>👇</div>
     </div>
+  );
+};
+
+/* log_serial: monitor serial, baris muncul cepat; baris error disorot merah berdenyut */
+const LogSerial: React.FC<P> = ({ data, dur }) => {
+  const frame = useCurrentFrame();
+  const baris: string[] = data.baris ?? [];
+  const sorot: number[] = data.sorot ?? [];
+  const err = !!data.error;
+  const jeda = Math.min(7, (dur * 0.45) / Math.max(1, baris.length));
+  const w = err ? C.err : C.ok;
+  const m = useMasuk();
+  return (
+    <Panel garis={w} style={{ padding: 0, overflow: 'hidden', transform: `scale(${0.94 + 0.06 * m})`, boxShadow: `0 0 60px ${w}33, 0 30px 80px rgba(0,0,0,0.45)` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '20px 30px', backgroundColor: '#0E1418', borderBottom: `2px solid ${C.border}`, fontFamily: FONT.mono, fontSize: 28, color: C.dim }}>
+        <div style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: w, boxShadow: `0 0 12px ${w}` }} />
+        {data.judul ?? 'Serial Monitor'}
+        <div style={{ marginLeft: 'auto' }}>{data.baud ?? '115200 baud'}</div>
+      </div>
+      <div style={{ padding: '26px 30px 34px', backgroundColor: '#070B0D', minHeight: 420 }}>
+        {baris.map((b, i) => {
+          const t0 = i * jeda;
+          const n = Math.max(0, Math.floor((frame - t0) * 6 + 6));
+          if (frame < t0) return null;
+          const disorot = sorot.includes(i + 1);
+          const denyut = disorot ? 0.16 + 0.12 * (0.5 + 0.5 * Math.sin(frame / 5)) : 0;
+          const aktif = i === baris.length - 1 || frame < (i + 1) * jeda;
+          return (
+            <div key={i} style={{ fontFamily: FONT.mono, fontVariantLigatures: 'none', fontSize: 34, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: disorot ? (err ? '#FFD4D4' : '#D4FFE9') : (err ? '#9FB3A8' : '#8FE3B8'), backgroundColor: disorot ? `rgba(${err ? '255,107,107' : '61,220,151'},${denyut.toFixed(3)})` : 'transparent', borderLeft: `6px solid ${disorot ? w : 'transparent'}`, paddingLeft: 14 }}>
+              {b.slice(0, n)}
+              {aktif && frame % 14 < 7 ? <span style={{ color: w }}>▌</span> : null}
+            </div>
+          );
+        })}
+      </div>
+    </Panel>
   );
 };

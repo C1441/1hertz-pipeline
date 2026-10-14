@@ -107,6 +107,25 @@ function glitch() {
   return out;
 }
 
+function impact() {
+  // dentum pendek: sub turun + klik transien (untuk stiker kata kunci)
+  const N = n(0.42), out = new Float32Array(N), lp = biquad('lp'); let fase = 0;
+  for (let i = 0; i < N; i++) {
+    const t = i / RATE; fase += (2 * Math.PI * (50 + 140 * Math.exp(-t * 28))) / RATE;
+    out[i] = Math.sin(fase) * Math.exp(-t * 9) + 0.45 * lp(acak(), 2500, 0.7) * Math.exp(-t * 60);
+  }
+  return out;
+}
+function riser() {
+  // naik 0,9 detik menuju adegan terakhir
+  const N = n(0.9), out = new Float32Array(N), bp = biquad('bp'); let fase = 0;
+  for (let i = 0; i < N; i++) {
+    const t = i / N; fase += (2 * Math.PI * (180 + 900 * t * t)) / RATE;
+    out[i] = (0.5 * bp(acak(), 400 + 5000 * t * t, 1.4) + 0.25 * Math.sin(fase)) * Math.pow(t, 1.6) * Math.min(1, (1 - t) * 30);
+  }
+  return out;
+}
+
 /* ---------- backsound: 100 BPM, 8 bar, loop mulus ---------- */
 function musik() {
   const BPM = 100, ketuk = 60 / BPM, bar = ketuk * 4, BAR = 8;
@@ -162,7 +181,7 @@ function musik() {
   return out;
 }
 
-const daftar = { 'sfx/whoosh.wav': whoosh, 'sfx/pop.wav': pop, 'sfx/klik.wav': klik, 'sfx/beep.wav': beep, 'sfx/buzz.wav': buzz, 'sfx/ding.wav': ding, 'sfx/glitch.wav': glitch, 'musik/bed-1hertz.wav': musik };
+const daftar = { 'sfx/whoosh.wav': whoosh, 'sfx/pop.wav': pop, 'sfx/klik.wav': klik, 'sfx/beep.wav': beep, 'sfx/buzz.wav': buzz, 'sfx/ding.wav': ding, 'sfx/glitch.wav': glitch, 'sfx/impact.wav': impact, 'sfx/riser.wav': riser, 'musik/bed-1hertz.wav': musik };
 const paksa = process.argv.includes('--ulang');
 for (const [nama, fn] of Object.entries(daftar)) {
   const f = path.join(AKAR, nama);

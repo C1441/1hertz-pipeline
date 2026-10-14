@@ -1,5 +1,5 @@
 // Cek field wajib JSON konten 1Hertz (sama dengan node "Cek field wajib" di n8n).
-const KOMPONEN_OK = ['kartu_status', 'kartu_kode', 'x_vs_y', 'kartu_masalah', 'kartu_solusi', 'diagram', 'bukti_asli', 'ilustrasi', 'cta'];
+const KOMPONEN_OK = ['kartu_status', 'kartu_kode', 'x_vs_y', 'kartu_masalah', 'kartu_solusi', 'diagram', 'bukti_asli', 'ilustrasi', 'cta', 'log_serial'];
 
 function cek(d) {
   const err = [];

@@ -19,7 +19,7 @@ const REMOTION = path.join(AKAR, 'remotion');
 const HASIL = path.join(AKAR, 'hasil');
 const MODEL_TTS = ['gemini-3.8-flash-tts', 'gemini-3.8-flash-lite-tts', 'gemini-3.1-flash-tts-preview'];
 const SUARA = process.env.SUARA_TTS || 'Puck';
-const GAYA = 'santai dan jelas, seperti teman yang jago elektronika lagi ngejelasin, tempo sedang, bahasa Indonesia sehari-hari';
+const GAYA = 'energik tapi santai, seperti teman yang jago elektronika lagi ngejelasin ke temannya, tempo agak cepat tanpa jeda panjang, penekanan jelas di kata penting, bahasa Indonesia sehari-hari';
 
 const log = (...a) => console.error('[produksi]', ...a);
 const gagal = (m) => { console.error('GAGAL=' + m); process.exit(1); };

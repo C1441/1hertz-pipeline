@@ -28,7 +28,7 @@ export type Kata = { teks: string; mulai: number; selesai: number; adegan: numbe
 
 type Props = { konten: any; audio?: string; kata?: Kata[]; amplitudo?: number[]; musik?: string; sfx?: boolean };
 
-const TRANSISI = ['zoom', 'geser', 'sapu', 'glitch'] as const;
+const TRANSISI = ['zoom', 'whip', 'geser', 'glitch', 'sapu', 'whip'] as const;
 
 export const Short1Hertz: React.FC<Props> = ({ konten, audio, kata, amplitudo, musik, sfx = true }) => {
   const { fps, durationInFrames } = useVideoConfig();
@@ -37,17 +37,27 @@ export const Short1Hertz: React.FC<Props> = ({ konten, audio, kata, amplitudo, m
   const amp = amplitudo ?? [];
 
   // jadwal efek suara: whoosh di tiap pergantian adegan + efek khusus tiap komponen
+  // waktu kata kunci tiap adegan (detik relatif awal adegan) untuk punch-zoom + stiker
+  const tKunci = useMemo(() => adegan.map((a, i) => {
+    const k = a.kata_kunci ? bersih(a.kata_kunci) : '';
+    if (!k) return -1;
+    const w = daftarKata.find((x) => x.adegan === i && bersih(x.teks).includes(k));
+    return w ? Math.max(0, w.mulai - a.mulai) : -1;
+  }), [adegan, daftarKata]);
+
   const jadwal = useMemo(() => {
     if (!sfx) return [];
-    const out: { src: string; frame: number; vol: number }[] = [{ src: 'sfx/glitch.wav', frame: 0, vol: 0.25 }];
+    const out: { src: string; frame: number; vol: number }[] = [{ src: 'sfx/impact.wav', frame: 0, vol: 0.45 }, { src: 'sfx/glitch.wav', frame: 1, vol: 0.2 }];
     adegan.forEach((a, i) => {
       const from = Math.round(a.mulai * fps);
       const dur = Math.max(1, Math.round((a.selesai - a.mulai) * fps));
-      if (i > 0) out.push({ src: 'sfx/whoosh.wav', frame: Math.max(0, from - 7), vol: 0.32 });
+      if (i > 0) out.push({ src: 'sfx/whoosh.wav', frame: Math.max(0, from - 7), vol: 0.34 });
+      if (i === adegan.length - 1 && i > 0) out.push({ src: 'sfx/riser.wav', frame: Math.max(0, from - 26), vol: 0.22 });
+      if (i > 0 && tKunci[i] >= 0) out.push({ src: 'sfx/impact.wav', frame: from + Math.round(tKunci[i] * fps), vol: 0.3 });
       for (const s of jadwalSfxKomponen(a.komponen, a.data ?? {}, dur)) out.push({ src: s.src, frame: from + s.frame, vol: s.vol });
     });
     return out.filter((s) => s.frame < durationInFrames - 2);
-  }, [adegan, fps, sfx, durationInFrames]);
+  }, [adegan, fps, sfx, durationInFrames, tKunci]);
 
   return (
     <AbsoluteFill style={{ backgroundColor: C.bg, fontFamily: FONT.sans, color: C.text }}>
@@ -59,7 +69,7 @@ export const Short1Hertz: React.FC<Props> = ({ konten, audio, kata, amplitudo, m
           volume={(f) => {
             const fade = Math.min(1, f / (fps * 1.2), (durationInFrames - f) / (fps * 1.5));
             const a = amp[f] ?? 0;
-            return Math.max(0, 0.11 * fade * (1 - 0.4 * a));
+            return Math.max(0, 0.12 * fade * (1 - 0.6 * a));
           }}
         />
       ) : null}
@@ -77,10 +87,11 @@ export const Short1Hertz: React.FC<Props> = ({ konten, audio, kata, amplitudo, m
         const dur = Math.max(1, Math.round((a.selesai - a.mulai) * fps));
         return (
           <Sequence key={a.no ?? i} from={from} durationInFrames={dur} name={`Adegan ${a.no} · ${a.komponen}`}>
-            <AdeganView a={a} dur={dur} transisi={i === 0 ? 'zoom' : TRANSISI[i % TRANSISI.length]} />
+            <AdeganView a={a} dur={dur} transisi={i === 0 ? 'langsung' : TRANSISI[i % TRANSISI.length]} tKunci={tKunci[i]} stiker={i > 0} />
           </Sequence>
         );
       })}
+      <HookJudul teks={konten?.publikasi?.teks_cover || adegan[0]?.teks_layar || ''} />
       {adegan.slice(1).map((a, i) => (
         <Sequence key={`sapu${i}`} from={Math.max(0, Math.round(a.mulai * fps) - 3)} durationInFrames={12} layout="none">
           <GarisSapu />
@@ -89,6 +100,7 @@ export const Short1Hertz: React.FC<Props> = ({ konten, audio, kata, amplitudo, m
       <Subtitle kata={daftarKata} adegan={adegan} />
       <JejakSinyal amp={amp} />
       <Scanline />
+      <BarProgres />
     </AbsoluteFill>
   );
 };
@@ -146,8 +158,9 @@ const Header: React.FC<{ amp: number[] }> = ({ amp }) => {
   const { fps } = useVideoConfig();
   const nyala = (frame % fps) / fps < 0.5;
   const a = amp[frame] ?? 0;
+  const muncul = interpolate(frame, [fps * 2.4, fps * 2.8], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   return (
-    <div style={{ position: 'absolute', top: 72, left: 0, right: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 18, fontFamily: FONT.mono, fontSize: 34, letterSpacing: 6, color: C.dim }}>
+    <div style={{ position: 'absolute', top: 72, opacity: muncul, left: 0, right: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 18, fontFamily: FONT.mono, fontSize: 34, letterSpacing: 6, color: C.dim }}>
       <div style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: nyala ? C.signal : '#1D2A30', boxShadow: nyala ? `0 0 ${18 + a * 30}px ${C.signal}` : 'none' }} />
       1HERTZ
     </div>
@@ -199,18 +212,25 @@ const GarisSapu: React.FC = () => {
 
 /* ---------- satu adegan ---------- */
 
-const AdeganView: React.FC<{ a: Adegan; dur: number; transisi: (typeof TRANSISI)[number] }> = ({ a, dur, transisi }) => {
+const AdeganView: React.FC<{ a: Adegan; dur: number; transisi: (typeof TRANSISI)[number] | 'langsung'; tKunci: number; stiker: boolean }> = ({ a, dur, transisi, tKunci, stiker }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const m = spring({ frame, fps, config: { damping: 18, stiffness: 140, mass: 0.7 }, durationInFrames: 16 });
+  const m = transisi === 'langsung' ? 1 : spring({ frame, fps, config: { damping: 18, stiffness: 140, mass: 0.7 }, durationInFrames: 16 });
   const keluar = interpolate(frame, [dur - 6, dur], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const dorong = interpolate(frame, [0, dur], [1, 1.035]); // kamera maju pelan
+  const dorong = interpolate(frame, [0, dur], [1, 1.04]); // kamera maju pelan
+  // punch-zoom saat kata kunci diucapkan (pola interupsi visual tiap ±2 detik)
+  const fk = tKunci >= 0 ? frame - Math.round(tKunci * fps) : -1;
+  const punch = fk >= 0 ? 0.07 * Math.exp(-fk / 5) : 0;
+  // getar untuk adegan masalah/error
+  const error = a.komponen === 'kartu_masalah' || (a.komponen === 'log_serial' && a.data?.error);
+  const getar = error && frame < 12 ? (random(`s${frame}${a.no}`) - 0.5) * (12 - frame) * 2.4 : 0;
 
   let transform = '';
   let filter = '';
   let clip: string | undefined;
   if (transisi === 'zoom') { transform = `scale(${0.82 + 0.18 * m})`; filter = `blur(${(1 - m) * 14}px)`; }
   if (transisi === 'geser') { transform = `translateX(${(1 - m) * 260}px) rotate(${(1 - m) * 3}deg)`; }
+  if (transisi === 'whip') { transform = `translateX(${(1 - m) * -900}px)`; filter = `blur(${(1 - m) * 22}px)`; }
   if (transisi === 'sapu') { clip = `inset(0 ${Math.max(0, (1 - m) * 100)}% 0 0)`; }
   if (transisi === 'glitch') {
     const g = frame < 8 ? (random(`g${frame}${a.no}`) - 0.5) * 60 : 0;
@@ -233,7 +253,7 @@ const AdeganView: React.FC<{ a: Adegan; dur: number; transisi: (typeof TRANSISI)
           alignItems: 'center',
           justifyContent: 'center',
           gap: 34,
-          transform: `${transform} scale(${dorong})`,
+          transform: `${transform} translateX(${getar}px) scale(${dorong + punch})`,
           filter: filter || undefined,
           clipPath: clip,
         }}
@@ -241,6 +261,9 @@ const AdeganView: React.FC<{ a: Adegan; dur: number; transisi: (typeof TRANSISI)
         {a.teks_layar ? <LabelKanal teks={a.teks_layar} kunci={a.kata_kunci} /> : null}
         <KomponenAdegan komponen={a.komponen} data={a.data ?? {}} dur={dur} />
       </div>
+      {fk >= 0 && fk < 3 ? <AbsoluteFill style={{ backgroundColor: '#FFFFFF', opacity: 0.1 * (3 - fk) / 3 }} /> : null}
+      {error && frame < 10 ? <AbsoluteFill style={{ boxShadow: `inset 0 0 220px ${C.err}`, opacity: (10 - frame) / 10 }} /> : null}
+      {stiker && tKunci >= 0 && a.kata_kunci ? <Stiker teks={a.kata_kunci} f={fk} dur={dur - Math.round(tKunci * fps)} error={!!error} /> : null}
     </AbsoluteFill>
   );
 };
@@ -261,6 +284,51 @@ const LabelKanal: React.FC<{ teks: string; kunci?: string }> = ({ teks, kunci })
         ))}
         <span style={{ opacity: frame % 16 < 8 ? 1 : 0, color: C.signal }}>▌</span>
       </span>
+    </div>
+  );
+};
+
+
+// Stiker kata kunci: dihentak miring di pojok saat kata kunci diucapkan (gaya meme/edukasi cepat)
+const Stiker: React.FC<{ teks: string; f: number; dur: number; error: boolean }> = ({ teks, f, dur, error }) => {
+  if (f < 0) return null;
+  const tahan = Math.min(dur - 4, 40);
+  if (f > tahan + 8) return null;
+  const opsi = { extrapolateLeft: 'clamp' as const, extrapolateRight: 'clamp' as const };
+  const s = interpolate(f, [0, 4, 8], [1.9, 0.92, 1], opsi);
+  const o = interpolate(f, [0, 2, tahan, tahan + 8], [0, 1, 1, 0], opsi);
+  const w = error ? C.err : C.amber;
+  return (
+    <div style={{ position: 'absolute', top: 205, right: 54, transform: `rotate(-7deg) scale(${s})`, opacity: o, padding: '10px 26px', borderRadius: 14, backgroundColor: w, color: '#0B0E11', fontSize: 54, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, boxShadow: `0 10px 0 rgba(0,0,0,0.45), 0 0 40px ${w}66`, border: '4px solid #0B0E11' }}>
+      {tanpaTandaBaca(teks)}
+    </div>
+  );
+};
+
+// Judul hook besar di detik pertama (teks_cover), lalu naik dan hilang
+const HookJudul: React.FC<{ teks: string }> = ({ teks }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  if (!teks || frame > fps * 2.6) return null;
+  const opsi = { extrapolateLeft: 'clamp' as const, extrapolateRight: 'clamp' as const };
+  const s = interpolate(frame, [0, 5, 9], [1.35, 0.97, 1], opsi);
+  const keluar = interpolate(frame, [fps * 2.1, fps * 2.6], [0, 1], { ...opsi, easing: Easing.in(Easing.cubic) });
+  return (
+    <div style={{ position: 'absolute', top: 120 - keluar * 160, left: 50, right: 50, display: 'flex', justifyContent: 'center', opacity: 1 - keluar, transform: `scale(${s})` }}>
+      <div style={{ padding: '18px 34px', borderRadius: 20, backgroundColor: C.text, color: '#0B0E11', fontSize: 68, fontWeight: 900, lineHeight: 1.08, textAlign: 'center', textTransform: 'uppercase', boxShadow: `0 12px 0 ${C.signal}, 0 20px 60px rgba(0,0,0,0.6)` }}>
+        {teks}
+      </div>
+    </div>
+  );
+};
+
+// Bar progres tipis di paling atas: penonton tahu videonya pendek
+const BarProgres: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { durationInFrames } = useVideoConfig();
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 10, backgroundColor: 'rgba(255,255,255,0.08)' }}>
+      <div style={{ width: `${(frame / Math.max(1, durationInFrames - 1)) * 100}%`, height: '100%', backgroundColor: C.signal, boxShadow: `0 0 16px ${C.signal}` }} />
     </div>
   );
 };
@@ -327,7 +395,8 @@ const Subtitle: React.FC<{ kata: Kata[]; adegan: Adegan[] }> = ({ kata, adegan }
         flexWrap: 'wrap',
         alignContent: 'center',
         justifyContent: 'center',
-        columnGap: 36,
+        columnGap: 14,
+        rowGap: 8,
         fontSize: 80,
         fontWeight: 900,
         textTransform: 'uppercase',
@@ -336,6 +405,8 @@ const Subtitle: React.FC<{ kata: Kata[]; adegan: Adegan[] }> = ({ kata, adegan }
     >
       {g.kata.map((k, i) => {
         const aktif = t >= k.mulai - 0.03;
+        const berikut = g!.kata[i + 1];
+        const sekarang = aktif && (!berikut || t < berikut.mulai - 0.03);
         const kunci = adegan[k.adegan]?.kata_kunci;
         const isKunci = kunci && bersih(k.teks).includes(bersih(kunci));
         // pop yang sama untuk SETIAP kata: 0.9 → 1.15 → 1.0 dalam ±8 frame sejak kata diucapkan
@@ -351,9 +422,12 @@ const Subtitle: React.FC<{ kata: Kata[]; adegan: Adegan[] }> = ({ kata, adegan }
               flexShrink: 0,
               whiteSpace: 'nowrap',
               transform: `translateY(${naik}px) scale(${skala})`,
-              color: isKunci ? C.amber : aktif ? C.text : '#5E6C77',
-              textShadow: isKunci && aktif ? `0 0 30px ${C.amber}88, 0 6px 20px rgba(0,0,0,0.9)` : '0 6px 20px rgba(0,0,0,0.9)',
-              WebkitTextStroke: '2px rgba(0,0,0,0.35)',
+              color: sekarang ? '#0B0E11' : isKunci ? C.amber : aktif ? C.text : '#5E6C77',
+              backgroundColor: sekarang ? (isKunci ? C.amber : C.signal) : 'transparent',
+              padding: '0 14px',
+              borderRadius: 14,
+              textShadow: sekarang ? 'none' : isKunci && aktif ? `0 0 30px ${C.amber}88, 0 6px 20px rgba(0,0,0,0.9)` : '0 6px 20px rgba(0,0,0,0.9)',
+              WebkitTextStroke: sekarang ? '0px' : '2px rgba(0,0,0,0.35)',
             }}
           >
             {tanpaTandaBaca(k.teks)}
