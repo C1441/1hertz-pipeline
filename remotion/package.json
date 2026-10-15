@@ -9,8 +9,9 @@
   },
   "dependencies": {
     "@remotion/cli": "4.0.528",
-    "remotion": "4.0.528",
+    "@wokwi/elements": "^1.9.2",
     "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react-dom": "19.1.1",
+    "remotion": "4.0.528"
   }
 }
