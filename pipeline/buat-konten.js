@@ -80,9 +80,20 @@ async function pilihModel(key) {
 async function tanyaGemini(key, model, teks, cari) {
   const body = { contents: [{ role: 'user', parts: [{ text: teks }] }], generationConfig: { temperature: 0.7 } };
   if (cari) body.tools = [{ google_search: {} }];
-  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-    method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body),
-  });
+  let r;
+  for (let i = 1; ; i++) {
+    try {
+      r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body), signal: AbortSignal.timeout(240000),
+      });
+      break;
+    } catch (e) {
+      const sebab = `${e.name}: ${e.message}${e.cause ? ' (' + (e.cause.code || e.cause.message) + ')' : ''}`;
+      log(`jaringan ${model}: ${sebab} (coba ${i}/3)`);
+      if (i >= 3) return { status: 0, err: 'jaringan ' + sebab };
+      await new Promise((ok) => setTimeout(ok, 3000 * i));
+    }
+  }
   const isi = await r.text();
   if (!r.ok) return { status: r.status, err: isi.slice(0, 200) };
   const j = JSON.parse(isi);
