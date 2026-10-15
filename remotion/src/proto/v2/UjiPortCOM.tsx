@@ -54,10 +54,10 @@ export const UjiPortCOM: React.FC = () => {
 };
 
 /* ---------- adegan: laptop + kabel + ESP32 ---------- */
-const PB = { x: 690, y: 640, s: 1.6 }; // ESP32 tidur di meja, colokan USB di kiri
-const USB_PB = titikBoard('esp32', PB.x, PB.y, PB.s, true, 53.5, 199);
+const PB = { x: 715, y: 500, s: 1.6 }; // ESP32 tidur di meja, colokan USB di kiri
+const USB_PB = titikBoard('esp32', PB.x, PB.y, PB.s, true, 64, 199);
 const K_LED = titikBoard('esp32', PB.x, PB.y, PB.s, true, 37, 112.5);
-const KABEL_USB: Segmen[] = [[PORT_LAPTOP, [PORT_LAPTOP[0] + 70, PORT_LAPTOP[1] + 20], [USB_PB[0] - 80, USB_PB[1]], USB_PB]];
+const KABEL_USB: Segmen[] = [[PORT_LAPTOP, [PORT_LAPTOP[0] + 120, PORT_LAPTOP[1]], [USB_PB[0] - 100, USB_PB[1]], USB_PB]];
 
 const PapanUSB: React.FC<{ t: number; sukses: boolean }> = ({ t, sukses }) => {
   const [mx, my] = titik(KABEL_USB, 0.5);
@@ -91,10 +91,10 @@ const PapanUSB: React.FC<{ t: number; sukses: boolean }> = ({ t, sukses }) => {
             { warna: K.cyan, kecepatan: 0.35, jarak: 0.1, fase: 0.05, batas: sukses ? 1 : 0.5 },
           ]}
         />
-        {!sukses && <Ikon x={mx} y={my - 52} r={26} jenis="err" s={pop(t, 1.2)} />}
+        {!sukses && <Ikon x={mx + 52} y={my} r={26} jenis="err" s={pop(t, 1.2)} />}
         {!sukses && (
           <g opacity={naik(t, 1.4)}>
-            <text x={mx} y={my + 70} textAnchor="middle" fontFamily={MONO} fontWeight={700} fontSize={26} fill={K.err}>data</text>
+            <text x={mx + 92} y={my + 10} fontFamily={MONO} fontWeight={700} fontSize={26} fill={K.err}>data</text>
           </g>
         )}
         <g opacity={naik(t, sukses ? 31 : 0.9)}>
@@ -109,12 +109,12 @@ const PapanUSB: React.FC<{ t: number; sukses: boolean }> = ({ t, sukses }) => {
           <>
             <Checklist
               t={t}
-              x={530}
-              y={10}
-              lebar={520}
+              x={605}
+              y={180}
+              lebar={455}
               item={[
                 { teks: 'Kabel data', a: 31.6 },
-                { teks: 'Driver CP210x / CH340', a: 32.4 },
+                { teks: 'Driver USB', a: 32.4 },
               ]}
             />
             <Pill t={t} a={34.6} x={540} y={975} teks="Tulis di komentar ↓" />
@@ -146,10 +146,10 @@ const Penampang: React.FC<{ t: number }> = ({ t }) => {
   );
   const Vonis = ({ cx, data, a }: { cx: number; data: boolean; a: number }) => (
     <g opacity={naik(t, a)}>
-      <Ikon x={cx - 90} y={712} r={22} jenis="ok" />
-      <text x={cx - 56} y={724} fontFamily={SANS} fontWeight={700} fontSize={34} fill={K.text}>Daya</text>
-      <Ikon x={cx - 90} y={776} r={22} jenis={data ? 'ok' : 'err'} />
-      <text x={cx - 56} y={788} fontFamily={SANS} fontWeight={700} fontSize={34} fill={data ? K.text : K.err}>Data</text>
+      <Ikon x={cx - 70} y={712} r={22} jenis="ok" />
+      <text x={cx - 36} y={724} fontFamily={SANS} fontWeight={700} fontSize={34} fill={K.text}>Daya</text>
+      <Ikon x={cx - 70} y={776} r={22} jenis={data ? 'ok' : 'err'} />
+      <text x={cx - 36} y={788} fontFamily={SANS} fontWeight={700} fontSize={34} fill={data ? K.text : K.err}>Data</text>
     </g>
   );
   return (
@@ -219,9 +219,9 @@ const DeviceManager: React.FC<{ t: number; versi: 'error' | 'beres' }> = ({ t, v
 };
 
 /* ---------- adegan: zoom chip USB-UART ---------- */
-const ZB = { x: 200, y: 110, s: 3.4 }; // board tidur, diperbesar (tampak atas)
-const CHIP = titikBoard('esp32', ZB.x, ZB.y, ZB.s, true, 72.5, 146.5);
-const USB = titikBoard('esp32', ZB.x, ZB.y, ZB.s, true, 53.5, 199);
+const ZB = { x: 158, y: 90, s: 3.8 }; // board tidur, diperbesar (tampak atas)
+const CHIP = titikBoard('esp32', ZB.x, ZB.y, ZB.s, true, 75.6, 148.7);
+const USB = titikBoard('esp32', ZB.x, ZB.y, ZB.s, true, 64, 199);
 
 const ZoomChip: React.FC<{ t: number }> = ({ t }) => {
   const cincin = naik(t, 20.6);
@@ -229,7 +229,7 @@ const ZoomChip: React.FC<{ t: number }> = ({ t }) => {
   const Kartu = ({ x, chip, driver, pembuat, a }: { x: number; chip: string; driver: string; pembuat: string; a: number }) => {
     const s = pop(t, a);
     return (
-      <g opacity={Math.min(1, s)} transform={`translate(${x + 220},${668}) scale(${s}) translate(${-220},${-88})`}>
+      <g opacity={Math.min(1, s)} transform={`translate(${x + 220},${688}) scale(${s}) translate(${-220},${-88})`}>
         <g filter="url(#bayang)">
           <rect width={440} height={175} rx={22} fill={K.card} />
         </g>
@@ -248,14 +248,14 @@ const ZoomChip: React.FC<{ t: number }> = ({ t }) => {
       <Board jenis="esp32" x={ZB.x} y={ZB.y} s={ZB.s} tidur dayaNyala />
       <Svg>
         <g opacity={cincin}>
-          <circle cx={CHIP[0]} cy={CHIP[1]} r={56} fill="none" stroke={K.amber} strokeWidth={7} opacity={den} filter="url(#pendar)" />
-          <path d={`M${CHIP[0] - 30},${CHIP[1] + 50} L270,580`} stroke={K.amber} strokeWidth={3} opacity={naik(t, 21.8)} />
-          <path d={`M${CHIP[0] + 30},${CHIP[1] + 50} L820,580`} stroke={K.amber} strokeWidth={3} opacity={naik(t, 23.2)} />
-          <path d={`M${USB[0] - 6},${USB[1]} H140 V500`} fill="none" stroke={K.dim} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
-          <text x={140} y={540} textAnchor="middle" fontFamily={MONO} fontSize={26} letterSpacing={2} fill={K.dim}>colokan USB</text>
+          <circle cx={CHIP[0]} cy={CHIP[1]} r={60} fill="none" stroke={K.amber} strokeWidth={7} opacity={den} filter="url(#pendar)" />
+          <path d={`M${CHIP[0]},${CHIP[1] + 60} L260,600`} stroke={K.amber} strokeWidth={3} opacity={naik(t, 21.8)} />
+          <path d={`M${CHIP[0]},${CHIP[1] + 60} L820,600`} stroke={K.amber} strokeWidth={3} opacity={naik(t, 23.2)} />
+          <path d={`M${USB[0] - 6},${USB[1]} H120 V520`} fill="none" stroke={K.dim} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
+          <text x={120} y={556} textAnchor="middle" fontFamily={MONO} fontSize={26} letterSpacing={2} fill={K.dim}>colokan USB</text>
         </g>
         <Kartu x={40} chip="CP2102" driver="CP210x" pembuat="Silicon Labs" a={21.8} />
-        <text x={540} y={678} textAnchor="middle" fontFamily={MONO} fontSize={26} letterSpacing={3} fill={K.dim} opacity={naik(t, 22.7)}>ATAU</text>
+        <text x={540} y={698} textAnchor="middle" fontFamily={MONO} fontSize={26} letterSpacing={3} fill={K.dim} opacity={naik(t, 22.7)}>ATAU</text>
         <Kartu x={600} chip="CH340" driver="CH34x" pembuat="WCH" a={23.2} />
       </Svg>
     </>

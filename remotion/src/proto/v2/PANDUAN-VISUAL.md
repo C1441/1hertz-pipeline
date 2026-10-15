@@ -20,3 +20,15 @@
 - Lapis 1 (bentuk generik): `pustaka.tsx` — Kerangka, Adegan, Meja, Laptop, Board (Wokwi), Kabel + aliran, Jendela (sistem/terminal + diff), Checklist, Ikon, Pill.
 - Lapis 2 (objek): board/komponen dari @wokwi/elements (MIT). Objek yang belum ada (ESP32-CAM, Raspberry Pi) dibuat saat topiknya dipilih.
 - Visual khusus topik (mis. penampang kabel) dibuat per video hanya bila perlu.
+
+## QA sebelum dikirim ke Okta (wajib)
+Kesalahan 16 Okt: posisi chip ditebak dari thumbnail, frame dicek di ukuran kecil, yang dicek hanya tabrakan.
+1. **Koordinat objek diambil dari sumber gambar** (file elemen Wokwi / data pin), tidak pernah ditebak dari mata.
+2. **Cek di resolusi penuh** (crop area panggung 1080 px) di momen tiap adegan sudah diam, bukan thumbnail.
+3. **Daftar cek per adegan:**
+   - Sorotan/lingkaran tepat di tengah objek yang ditunjuk; garis penunjuk berawal dari titik yang sama.
+   - Keseimbangan: tidak berat sebelah, tidak ada area kosong besar, elemen berpasangan simetris.
+   - Margin ≥ 30 px dari tepi alas/layar; tidak ada teks keluar dari kartunya.
+   - Label tidak menimpa kabel/objek.
+   - Aturan realisme (sudut pandang, pijakan, ciri khas, proporsi).
+4. Kalau satu poin gagal: perbaiki dulu, render ulang, cek lagi.

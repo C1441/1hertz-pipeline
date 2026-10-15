@@ -202,7 +202,7 @@ export const Meja: React.FC<{ x?: number; y?: number; w?: number; h?: number; gr
 );
 
 /* ---------------- objek: laptop tampak atas (layar terbuka + keyboard) ---------------- */
-export const LAPTOP = { x: 40, y: 230, w: 540 };
+export const LAPTOP = { x: 40, y: 270, w: 540 };
 /** area layar untuk isi: x0..x1, y0..y1 */
 export const LAYAR = { x0: LAPTOP.x + 22, x1: LAPTOP.x + LAPTOP.w - 22, y0: LAPTOP.y + 28, y1: LAPTOP.y + 262 };
 export const PORT_LAPTOP: [number, number] = [LAPTOP.x + LAPTOP.w, LAPTOP.y + 560];
@@ -212,12 +212,12 @@ export const Laptop: React.FC<{ children?: React.ReactNode }> = ({ children }) =
   return (
     <g>
       <g filter="url(#bayang)">
-        {/* tutup layar (condong ke belakang, sedikit perspektif) */}
-        <path d={`M${x - 18},${y} H${x + L + 18} L${x + L},${y + 280} H${x} Z`} fill="#1B232C" stroke="#33404D" strokeWidth={3} strokeLinejoin="round" />
+        {/* tutup layar terbuka */}
+        <rect x={x} y={y} width={L} height={280} rx={16} fill="#1B232C" stroke="#33404D" strokeWidth={3} />
         {/* badan + keyboard */}
         <rect x={x} y={y + 290} width={L} height={340} rx={24} fill="#2A3440" stroke="#3A4754" strokeWidth={3} />
       </g>
-      <path d={`M${x + 2},${y + 18} H${x + L - 2} L${x + L - 14},${y + 268} H${x + 14} Z`} fill="#0E141A" />
+      <rect x={x + 16} y={y + 16} width={L - 32} height={250} rx={8} fill="#0E141A" />
       <rect x={x + 24} y={y + 280} width={L - 48} height={10} rx={4} fill="#151B22" />
       {Array.from({ length: 5 }, (_, r) =>
         Array.from({ length: 13 }, (_, c) => (
