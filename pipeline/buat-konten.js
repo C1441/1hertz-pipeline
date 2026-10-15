@@ -68,7 +68,7 @@ async function pilihModel(key) {
     const nama = (j.models || [])
       .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
       .map((m) => m.name.replace(/^models\//, ''))
-      .filter((n) => /^gemini-/.test(n) && !/(tts|image|live|embed|audio|vision|robotics|computer|thinking-exp|nano)/.test(n));
+      .filter((n) => /^gemini-/.test(n) && !/(tts|image|live|embed|audio|vision|robotics|computer|thinking-exp|nano)/.test(n) && /(flash|pro)/.test(n));
     const versi = (n) => { const m = /gemini-(\d+(?:\.\d+)?)/.exec(n); return m ? parseFloat(m[1]) : 0; };
     const skor = (n) => versi(n) * 10 + (/flash/.test(n) ? 3 : /pro/.test(n) ? 1 : 0) - (/lite/.test(n) ? 1 : 0) - (/preview|exp/.test(n) ? 0.5 : 0);
     modelCache = nama.sort((a, b) => skor(b) - skor(a)).slice(0, 4);
@@ -109,7 +109,7 @@ async function dariTema(tema) {
         }
         catatan.push(`${model}: jawaban bukan JSON`);
       } else catatan.push(`${model}${cari ? '+search' : ''}: ${h.status} ${String(h.err).replace(/\s+/g, ' ').slice(0, 120)}`);
-      if (h.status === 429) break;
+      if (h.status === 429 && !cari) break; // kuota model ini habis; kalau 429 cuma karena Google Search, coba tanpa search
     }
   }
   throw new Error('Gemini gagal membuat konten: ' + catatan.join(' | '));
