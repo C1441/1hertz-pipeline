@@ -98,11 +98,11 @@ async function susunIde(sinyal) {
   const prompt = PROMPT(sinyal, sudahDiproduksi());
   const catatan = [];
   for (const model of await pilihModel(key)) {
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 2; i++) {
       const h = await tanyaGemini(key, model, prompt, false);
       const arr = h.teks && ambilArray(h.teks);
       if (Array.isArray(arr) && arr.length) { log(`ide disusun oleh ${model}`); return { ide: arr.slice(0, 10), model }; }
-      catatan.push(`${model}: ${h.status || 'bukan JSON'}`);
+      catatan.push(`${model}: ${h.status || 'bukan JSON'} ${String(h.err || '').replace(/\s+/g, ' ').slice(0, 90)}`);
       if (h.status === 429) break;
       await new Promise((ok) => setTimeout(ok, 30000 * i)); // 503 = server Gemini sibuk, tunggu lebih lama
     }
