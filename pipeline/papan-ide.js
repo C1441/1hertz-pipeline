@@ -99,7 +99,7 @@ async function susunIde(sinyal) {
   const catatan = [];
   for (const model of await pilihModel(key)) {
     for (let i = 1; i <= 2; i++) {
-      const h = await tanyaGemini(key, model, prompt, false);
+      const h = await tanyaGemini(key, model, prompt, false, { pikir: true });
       const arr = h.teks && ambilArray(h.teks);
       if (Array.isArray(arr) && arr.length) { log(`ide disusun oleh ${model}`); return { ide: arr.slice(0, 10), model }; }
       catatan.push(`${model}: ${h.status || 'bukan JSON'} ${String(h.err || '').replace(/\s+/g, ' ').slice(0, 90)}`);

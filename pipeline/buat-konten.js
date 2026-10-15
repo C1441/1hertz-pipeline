@@ -77,8 +77,14 @@ async function pilihModel(key) {
   return modelCache;
 }
 
-async function tanyaGemini(key, model, teks, cari) {
-  const body = { contents: [{ role: 'user', parts: [{ text: teks }] }], generationConfig: { temperature: 0.7 } };
+// pikir = true → minta penalaran tinggi (Gemini 3: thinkingLevel, Gemini 2.5: thinkingBudget dinamis).
+// Kalau model menolak parameternya (400), otomatis diulang tanpa parameter itu.
+const PIKIR_TIDAK_DIDUKUNG = new Set();
+async function tanyaGemini(key, model, teks, cari, opsi = {}) {
+  const pikir = opsi.pikir && !PIKIR_TIDAK_DIDUKUNG.has(model);
+  const gc = { temperature: opsi.temperature ?? 0.7 };
+  if (pikir) gc.thinkingConfig = /gemini-2\./.test(model) ? { thinkingBudget: -1 } : { thinkingLevel: 'high' };
+  const body = { contents: [{ role: 'user', parts: [{ text: teks }] }], generationConfig: gc };
   if (cari) body.tools = [{ google_search: {} }];
   let r;
   for (let i = 1; ; i++) {
@@ -95,6 +101,7 @@ async function tanyaGemini(key, model, teks, cari) {
     }
   }
   const isi = await r.text();
+  if (!r.ok && r.status === 400 && pikir && /thinking/i.test(isi)) { PIKIR_TIDAK_DIDUKUNG.add(model); log(`${model}: thinking tidak didukung, ulang tanpa`); return tanyaGemini(key, model, teks, cari, { ...opsi, pikir: false }); }
   if (!r.ok) return { status: r.status, err: isi.slice(0, 200) };
   const j = JSON.parse(isi);
   const out = (j.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
@@ -112,7 +119,7 @@ async function dariTema(tema) {
     for (const cari of bolehCari ? [true, false] : [false]) {
       let h;
       for (let i = 1; i <= 3; i++) {
-        h = await tanyaGemini(key, model, prompt, cari);
+        h = await tanyaGemini(key, model, prompt, cari, { pikir: true });
         if (h.status !== 503 && h.status !== 500 && h.status !== 0) break;
         log(`${model}: ${h.status}, tunggu lalu coba lagi (${i}/3)`);
         await new Promise((ok) => setTimeout(ok, 15000 * i));
@@ -124,7 +131,7 @@ async function dariTema(tema) {
           if (h.sumber?.length && !(k.sumber || []).length) k.sumber = h.sumber.slice(0, 6);
           log(`konten dibuat oleh ${model}${cari ? ' + Google Search' : ''}`);
           k._dibuat_oleh = model;
-          return k;
+          return await kritikus(key, model, k);
         }
         catatan.push(`${model}: jawaban bukan JSON`);
       } else catatan.push(`${model}${cari ? '+search' : ''}: ${h.status} ${(/"message":\s*"([^"]{0,70})/.exec(String(h.err)) || [])[1] || String(h.err).slice(0, 70)}`);
@@ -132,6 +139,36 @@ async function dariTema(tema) {
     }
   }
   throw new Error('Gemini gagal membuat konten: ' + catatan.join(' | '));
+}
+
+// Kritikus: panggilan kedua yang memeriksa klaim teknis dan membetulkannya tanpa mengubah struktur.
+// Kalau gagal / hasilnya rusak, konten asli tetap dipakai (produksi tidak terhambat).
+async function kritikus(key, model, k) {
+  if (process.env.TANPA_KRITIKUS === '1') return k;
+  const prompt = `Kamu editor teknis senior (ESP32, Arduino, elektronika, FreeRTOS) untuk channel YouTube Shorts berbahasa Indonesia.
+Periksa JSON konten di bawah. Cari klaim yang SALAH atau meragukan: nama error/pesan log, nama fungsi/library, nomor pin, tegangan, perilaku chip, dan kode (harus bisa dikompilasi).
+- Betulkan yang salah langsung di field-nya (voiceover, teks_layar, data, publikasi). Pertahankan gaya bahasa santai dan panjang naskah (70–95 kata).
+- Kalau voiceover diubah, samakan juga naskah.voiceover_lengkap. Jangan ubah struktur, nama field, jumlah adegan, atau id.
+- Klaim yang tidak bisa kamu pastikan: lunakkan kalimatnya dan tulis di qa.perlu_dicek.
+- Tambahkan field "kritikus":{"diubah":["ringkas apa yang dibetulkan"],"yakin":1-5}.
+Jawab HANYA JSON lengkap hasil perbaikan.
+
+JSON:
+${JSON.stringify(k)}`;
+  for (let i = 1; i <= 2; i++) {
+    const h = await tanyaGemini(key, model, prompt, false, { pikir: true, temperature: 0.2 });
+    const baru = h.teks && ekstrakJson(h.teks);
+    if (baru && Array.isArray(baru.adegan) && baru.adegan.length === k.adegan.length && baru.publikasi) {
+      baru.id = k.id; baru._dibuat_oleh = model;
+      log(`kritikus: ${(baru.kritikus?.diubah || []).length} perbaikan, yakin ${baru.kritikus?.yakin ?? '?'}/5`);
+      return baru;
+    }
+    log(`kritikus ${model}: ${h.status || 'hasil tidak valid'} (coba ${i}/2)`);
+    if (h.status === 429) break;
+    await new Promise((ok) => setTimeout(ok, 15000 * i));
+  }
+  log('kritikus dilewati, pakai konten asli');
+  return k;
 }
 
 module.exports = { ekstrakJson, rapikan, dariTema, pilihModel, tanyaGemini };
