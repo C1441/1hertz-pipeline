@@ -103,7 +103,10 @@ async function tanyaGemini(key, model, teks, cari, opsi = {}) {
   }
   const isi = await r.text();
   if (!r.ok && r.status === 400 && pikir && /thinking/i.test(isi)) { PIKIR_TIDAK_DIDUKUNG.add(model); log(`${model}: thinking tidak didukung, ulang tanpa`); return tanyaGemini(key, model, teks, cari, { ...opsi, pikir: false }); }
-  if (!r.ok) return { status: r.status, err: isi.slice(0, 200) };
+  if (!r.ok) {
+    const kuota = r.status === 429 ? [...new Set([...isi.matchAll(/"quotaId":\s*"([^"]+)"/g)].map((m) => m[1]))].join(',') : '';
+    return { status: r.status, err: (kuota ? `[kuota ${kuota}] ` : '') + isi.slice(0, 200) };
+  }
   const j = JSON.parse(isi);
   const out = (j.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
   const sumber = (j.candidates?.[0]?.groundingMetadata?.groundingChunks || []).map((c) => c.web).filter(Boolean).map((w) => ({ judul: w.title, url: w.uri }));

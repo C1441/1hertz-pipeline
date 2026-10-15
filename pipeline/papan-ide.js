@@ -158,13 +158,13 @@ async function tanyaJson(prompt, cocok, label) {
   const key = (process.env.GEMINI_API_KEY || '').trim();
   const catatan = [];
   for (const model of await pilihModel(key)) {
-    for (let i = 1; i <= 2; i++) {
+    for (let i = 1; i <= 3; i++) {
       const h = await tanyaGemini(key, model, prompt, false, { pikir: true, json: true });
       const hasil = h.teks && cocok(h.teks);
       if (hasil) { log(`${label}: ${model}`); return { hasil, model }; }
-      catatan.push(`${model}: ${h.status || 'bukan JSON'} ${String(h.err || '').replace(/\s+/g, ' ').slice(0, 90)}`);
+      catatan.push(`${model}: ${h.status || 'bukan JSON'} ${String(h.err || '').replace(/\s+/g, ' ').slice(0, h.status === 429 ? 160 : 40)}`);
       if (h.status === 429) break;
-      await new Promise((ok) => setTimeout(ok, 30000 * i)); // 503 = server Gemini sibuk, tunggu lebih lama
+      await new Promise((ok) => setTimeout(ok, 45000 * i)); // 503 = server Gemini sibuk, tunggu lebih lama
     }
   }
   throw new Error(`Gemini gagal (${label}): ` + catatan.join(' | '));
@@ -172,6 +172,7 @@ async function tanyaJson(prompt, cocok, label) {
 
 async function susunIde(sinyal, teksAnalis, sel) {
   const t1 = await tanyaJson(PROMPT_MENTAH(sinyal, sudahDiproduksi()), (t) => { const a = ambilJsonDari(t, '[', ']'); return Array.isArray(a) && a.length >= 10 ? a.slice(0, 24) : null; }, 'ide mentah');
+  await new Promise((ok) => setTimeout(ok, 60000)); // jeda 1 menit: batas token per menit kuota gratis
   try {
     const t2 = await tanyaJson(PROMPT_SARING(t1.hasil, teksAnalis, sel), (t) => { const o = ambilJsonDari(t, '{', '}'); return o && Array.isArray(o.ide) && o.ide.length >= 5 ? o : null; }, 'kritikus');
     return { ...t2.hasil, ide: t2.hasil.ide.slice(0, 10), model: `${t1.model} → kritikus ${t2.model}`, mentah: t1.hasil.length };
