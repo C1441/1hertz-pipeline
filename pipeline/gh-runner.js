@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { cek } = require('./validasi');
+const { ekstrakJson, rapikan, dariTema } = require('./buat-konten');
 
 const AKAR = path.resolve(__dirname, '..');
 const FOLDER = {
@@ -62,9 +63,18 @@ async function google(token, url, opsi = {}) {
 }
 
 async function daftarAntrian(token) {
-  const q = encodeURIComponent(`'${FOLDER.antrian}' in parents and trashed = false and name contains '.json'`);
-  const r = await google(token, `${URL_DRIVE}/files?q=${q}&orderBy=createdTime&fields=files(id,name,createdTime)&pageSize=20&supportsAllDrives=true&includeItemsFromAllDrives=true`);
+  // terima: file .json, file .txt, atau Google Docs (isi = JSON lengkap ATAU cukup tema satu kalimat)
+  const q = encodeURIComponent(`'${FOLDER.antrian}' in parents and trashed = false and (name contains '.json' or name contains '.txt' or mimeType = 'application/vnd.google-apps.document' or mimeType = 'text/plain')`);
+  const r = await google(token, `${URL_DRIVE}/files?q=${q}&orderBy=createdTime&fields=files(id,name,mimeType,createdTime)&pageSize=20&supportsAllDrives=true&includeItemsFromAllDrives=true`);
   return (await r.json()).files || [];
+}
+
+async function bacaIsi(token, f) {
+  const url = f.mimeType === 'application/vnd.google-apps.document'
+    ? `${URL_DRIVE}/files/${f.id}/export?mimeType=text/plain`
+    : `${URL_DRIVE}/files/${f.id}?alt=media&supportsAllDrives=true`;
+  const r = await google(token, url);
+  return await r.text();
 }
 
 async function pindah(token, fileId, ke) {
@@ -124,11 +134,19 @@ async function modeProses() {
     log(`memproses ${f.name}`);
     let konten;
     try {
-      const r = await google(token, `${URL_DRIVE}/files/${f.id}?alt=media&supportsAllDrives=true`);
-      konten = JSON.parse(await r.text());
+      const isi = await bacaIsi(token, f);
+      konten = ekstrakJson(isi);
+      if (!konten) {
+        // bukan JSON → anggap isinya tema, minta Gemini menulis naskah + JSON
+        const tema = isi.replace(/\s+/g, ' ').trim();
+        if (tema.length < 4) throw new Error('file kosong');
+        log(`tema: "${tema.slice(0, 80)}" → Gemini membuat konten`);
+        konten = await dariTema(tema);
+      }
+      konten = rapikan(konten);
     } catch (e) {
-      log('JSON rusak/tidak bisa dibaca:', e.message);
-      await pindah(token, f.id, 'gagal'); catat(`| ${waktu} | ${f.name} | gagal | - | JSON tidak bisa dibaca |`); gagalAda = true; continue;
+      log('isi tidak bisa dipakai:', e.message); galat('isi antrian tidak bisa dipakai: ' + e.message);
+      await pindah(token, f.id, 'gagal'); catat(`| ${waktu} | ${f.name} | gagal | - | ${e.message.slice(0, 120).replace(/\|/g, '/')} |`); gagalAda = true; continue;
     }
     const v = cek(konten);
     if (!v.lanjut) {
