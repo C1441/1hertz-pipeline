@@ -161,28 +161,72 @@ const TAG_BOARD: Record<JenisBoard, string> = {
   nano: 'wokwi-arduino-nano',
   mega: 'wokwi-arduino-mega',
 };
-/** board di posisi (x,y) panggung, skala s (1 unit gambar ≈ 1 px) */
-export const Board: React.FC<{ jenis: JenisBoard; x: number; y: number; s: number; dayaNyala?: boolean; led?: boolean }> = ({ jenis, x, y, s, dayaNyala, led }) => {
+/** ukuran gambar asli (unit viewBox) — dipakai untuk rotasi & titik */
+export const DIM: Partial<Record<JenisBoard, [number, number]>> = { esp32: [107, 201] };
+/**
+ * board di panggung. tidur = diputar 90° searah jarum jam (board tergeletak di meja, colokan USB di kiri).
+ * (x, y) = pojok kiri atas kotak hasil akhir. 1 unit gambar ≈ s px.
+ */
+export const Board: React.FC<{ jenis: JenisBoard; x: number; y: number; s: number; tidur?: boolean; dayaNyala?: boolean; led?: boolean }> = ({ jenis, x, y, s, tidur, dayaNyala, led }) => {
   const Tag = TAG_BOARD[jenis] as any;
+  const h = (DIM[jenis] ?? [0, 0])[1];
+  const tf = tidur ? `translate(${h * s}px,0) rotate(90deg) scale(${s})` : `scale(${s})`;
   return (
-    <div style={{ position: 'absolute', left: x, top: y, transform: `scale(${s})`, transformOrigin: '0 0', filter: 'drop-shadow(0 14px 18px rgba(0,0,0,0.55))' }}>
-      <Tag ledPower={!!dayaNyala} led1={!!led} />
+    <div style={{ position: 'absolute', left: x, top: y, filter: 'drop-shadow(0 10px 14px rgba(0,0,0,0.5))' }}>
+      <div style={{ transform: tf, transformOrigin: '0 0' }}>
+        <Tag ledPower={!!dayaNyala} led1={!!led} />
+      </div>
     </div>
   );
 };
+/** titik pada gambar board (ex, ey) → koordinat panggung */
+export const titikBoard = (jenis: JenisBoard, x: number, y: number, s: number, tidur: boolean, ex: number, ey: number): [number, number] => {
+  const h = (DIM[jenis] ?? [0, 0])[1];
+  return tidur ? [x + (h - ey) * s, y + ex * s] : [x + ex * s, y + ey * s];
+};
 
-/* ---------------- objek: laptop dengan isi layar ---------------- */
-export const LAPTOP = { x: 30, y: 250, w: 490, h: 350 };
+/* ---------------- objek: alas meja (cutting mat) ---------------- */
+export const Meja: React.FC<{ x?: number; y?: number; w?: number; h?: number; grid?: number }> = ({ x = 10, y = 150, w: L = 1060, h = 890, grid = 54 }) => (
+  <g>
+    <rect x={x} y={y} width={L} height={h} rx={28} fill="#15201C" stroke="#25352D" strokeWidth={3} />
+    {Array.from({ length: Math.floor(L / grid) }, (_, i) => (
+      <line key={`v${i}`} x1={x + (i + 1) * grid} y1={y + 14} x2={x + (i + 1) * grid} y2={y + h - 14} stroke="#1D2B25" strokeWidth={2} />
+    ))}
+    {Array.from({ length: Math.floor(h / grid) }, (_, i) => (
+      <line key={`h${i}`} x1={x + 14} y1={y + (i + 1) * grid} x2={x + L - 14} y2={y + (i + 1) * grid} stroke="#1D2B25" strokeWidth={2} />
+    ))}
+    {Array.from({ length: Math.floor(L / (grid / 2)) }, (_, i) => (
+      <line key={`r${i}`} x1={x + (i + 1) * (grid / 2)} y1={y + 6} x2={x + (i + 1) * (grid / 2)} y2={y + (i % 2 ? 16 : 24)} stroke="#3B5247" strokeWidth={2} />
+    ))}
+  </g>
+);
+
+/* ---------------- objek: laptop tampak atas (layar terbuka + keyboard) ---------------- */
+export const LAPTOP = { x: 40, y: 230, w: 540 };
+/** area layar untuk isi: x0..x1, y0..y1 */
+export const LAYAR = { x0: LAPTOP.x + 22, x1: LAPTOP.x + LAPTOP.w - 22, y0: LAPTOP.y + 28, y1: LAPTOP.y + 262 };
+export const PORT_LAPTOP: [number, number] = [LAPTOP.x + LAPTOP.w, LAPTOP.y + 560];
 export const Laptop: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-  const { x, y, w: L, h } = LAPTOP;
+  const { x, y, w: L } = LAPTOP;
+  const lebarTuts = (L - 70 - 12 * 8) / 13;
   return (
     <g>
       <g filter="url(#bayang)">
-        <rect x={x} y={y} width={L} height={h} rx={20} fill="#1B232C" stroke="#33404D" strokeWidth={3} />
-        <path d={`M${x - 30},${y + h} h${L + 60} l-26,40 h${-(L + 8)} z`} fill="#2A3440" />
+        {/* tutup layar (condong ke belakang, sedikit perspektif) */}
+        <path d={`M${x - 18},${y} H${x + L + 18} L${x + L},${y + 280} H${x} Z`} fill="#1B232C" stroke="#33404D" strokeWidth={3} strokeLinejoin="round" />
+        {/* badan + keyboard */}
+        <rect x={x} y={y + 290} width={L} height={340} rx={24} fill="#2A3440" stroke="#3A4754" strokeWidth={3} />
       </g>
-      <rect x={x + 20} y={y + 20} width={L - 40} height={h - 40} rx={8} fill="#0E141A" />
-      <rect x={x + L / 2 - 50} y={y + h + 4} width={100} height={8} rx={4} fill="#3A4754" />
+      <path d={`M${x + 2},${y + 18} H${x + L - 2} L${x + L - 14},${y + 268} H${x + 14} Z`} fill="#0E141A" />
+      <rect x={x + 24} y={y + 280} width={L - 48} height={10} rx={4} fill="#151B22" />
+      {Array.from({ length: 5 }, (_, r) =>
+        Array.from({ length: 13 }, (_, c) => (
+          <rect key={`${r}-${c}`} x={x + 35 + c * (lebarTuts + 8)} y={y + 318 + r * 38} width={lebarTuts} height={30} rx={5} fill="#1B222B" />
+        )),
+      )}
+      <rect x={x + 35 + 3 * (lebarTuts + 8)} y={y + 508} width={7 * (lebarTuts + 8) - 8} height={30} rx={5} fill="#1B222B" />
+      <rect x={x + L / 2 - 95} y={y + 554} width={190} height={62} rx={10} fill="#242D37" stroke="#3A4754" strokeWidth={2} />
+      <rect x={x + L - 4} y={y + 548} width={12} height={24} rx={3} fill="#9AA5B1" />
       <g>{children}</g>
     </g>
   );
