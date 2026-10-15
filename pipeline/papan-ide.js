@@ -11,6 +11,8 @@
 const fs = require('fs');
 const path = require('path');
 const { pilihModel, tanyaGemini } = require('./buat-konten');
+const { kumpulkanAnalis, teksLaporan, simpanLaporan } = require('./analis');
+const { modeGemini } = require('./saklar');
 
 const AKAR = path.resolve(__dirname, '..');
 const FOLDER_IDE = process.env.FOLDER_IDE || '1U0BhW-nZFCknkgkqM3sl8zIp4t6gD26n';
@@ -36,7 +38,7 @@ async function ambilJson(url, headers = {}) {
   } catch (e) { log(`${url.split('?')[0]} → ${e.message}`); return null; }
 }
 
-async function kumpulkanSinyal() {
+async function kumpulkanSinyal(analis) {
   const dari = Math.floor(Date.now() / 1000) - 75 * 86400;
   const out = [];
   for (const [site, tag] of [['stackoverflow', 'esp32'], ['stackoverflow', 'arduino'], ['stackoverflow', 'esp8266'], ['arduino', 'esp32'], ['arduino', '']]) {
@@ -54,9 +56,18 @@ async function kumpulkanSinyal() {
     const j = await ambilJson(`https://www.reddit.com/r/${sub}/top.json?t=month&limit=25`);
     for (const c of j?.data?.children || []) { const d = c.data; if (d && !d.stickied) out.push({ sumber: `Reddit r/${sub}`, judul: d.title, url: `https://www.reddit.com${d.permalink}`, angka: `upvote ${d.score}, komentar ${d.num_comments}` }); }
   }
-  // buang duplikat URL
+  // kabar baru: rilis core/SDK Espressif
+  for (const repo of ['espressif/arduino-esp32', 'espressif/esp-idf']) {
+    const j = await ambilJson(`https://api.github.com/repos/${repo}/releases?per_page=2`, gh);
+    for (const rl of Array.isArray(j) ? j : []) out.push({ sumber: `Rilis ${repo}`, judul: `${rl.name || rl.tag_name} (${String(rl.published_at || '').slice(0, 10)})`, url: rl.html_url, angka: `reaksi ${rl.reactions?.total_count ?? 0}` });
+  }
+  // dari Analis: video outlier di niche + komentar penonton (sendiri & outlier)
+  for (const v of analis?.outlier || []) out.push({ sumber: 'YouTube outlier', judul: `${v.judul} — ${v.kanal}`, url: v.url, angka: `views ${v.views}, subs channel ${v.subs ?? 'tersembunyi'}, rasio ${v.rasio ?? '-'}x` });
+  for (const c of analis?.komentarSendiri || []) out.push({ sumber: 'Komentar penonton 1Hertz', judul: `"${c.teks}" (di: ${c.video})`, url: `https://youtu.be/${(analis.video.find((v) => v.judul === c.video) || {}).id || ''}`, angka: `suka ${c.suka}` });
+  for (const c of analis?.komentarOutlier || []) out.push({ sumber: 'Komentar video outlier', judul: `"${c.teks}" (di: ${c.video})`, url: c.url, angka: `suka ${c.suka}, balasan ${c.balasan}` });
+  // buang duplikat (URL + judul; komentar boleh berbagi URL video)
   const lihat = new Set();
-  return out.filter((s) => s.url && !lihat.has(s.url) && lihat.add(s.url));
+  return out.filter((s) => { const k = s.url + '|' + s.judul; return s.url && !lihat.has(k) && lihat.add(k); });
 }
 
 function sudahDiproduksi() {
@@ -66,73 +77,151 @@ function sudahDiproduksi() {
   } catch { return []; }
 }
 
-/* ---------- Gemini ---------- */
-const PROMPT = (sinyal, sudah) => `Kamu tim kreatif channel YouTube Shorts "1Hertz" (IoT, ESP32, Arduino, elektronika; penonton pelajar SMK/mahasiswa teknik dan hobiis Indonesia).
-MISI: secepatnya layak YouTube Partner Program (500 → 1.000 subscriber, jutaan views Shorts dalam 90 hari) dengan 1 video per hari.
+/* ---------- selera Okta: belajar dari Papan Ide sebelumnya ---------- */
+async function selera(token) {
+  const hasil = { disetujui: [], ditolak: [], papan: 0 };
+  try {
+    const q = encodeURIComponent(`'${FOLDER_IDE}' in parents and trashed = false and mimeType = 'application/vnd.google-apps.document'`);
+    const r = await fetch(`${URL_DRIVE}/files?q=${q}&orderBy=createdTime desc&fields=files(id,name)&pageSize=4`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) return hasil;
+    for (const f of (await r.json()).files || []) {
+      const e = await fetch(`${URL_DRIVE}/files/${f.id}/export?mimeType=text/plain`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!e.ok) continue;
+      const ide = [];
+      for (const b of (await e.text()).split(/\r?\n/).map((s) => s.replace(/^﻿/, ''))) {
+        const m = /^\s*\[\s*([^\]]*)\]\s*(\d{1,2})\.\s*TEMA:\s*(.+?)\s*$/.exec(b);
+        if (m) { ide.push({ setuju: /x|v|✓|✔/i.test(m[1]), tema: m[3], alasan: '' }); continue; }
+        const a = /^\s*Alasan kalau ditolak:\s*(.*\S)?\s*$/.exec(b);
+        if (a && ide.length && a[1] && !/^\(.*\)$/.test(a[1])) ide[ide.length - 1].alasan = a[1];
+      }
+      if (!ide.some((i) => i.setuju)) continue; // papan yang belum direview tidak dihitung
+      hasil.papan++;
+      for (const i of ide) (i.setuju ? hasil.disetujui : hasil.ditolak).push(i);
+    }
+  } catch (e) { log('baca selera gagal:', e.message); }
+  return hasil;
+}
 
-Di bawah ada SINYAL PERMINTAAN NYATA (pertanyaan forum, issue GitHub, postingan Reddit) beserta angkanya. Susun 10 ide video.
+/* ---------- Gemini: 2 tahap ---------- */
+const DASAR = `Kamu tim kreatif channel YouTube Shorts "1Hertz" (IoT, ESP32, Arduino, elektronika; penonton pelajar SMK/mahasiswa teknik dan hobiis Indonesia).
+MISI: secepatnya layak YouTube Partner Program (500 → 1.000 subscriber, jutaan views Shorts dalam 90 hari) dengan 1 video per hari. Pendorong terbesar: ide berseri (subscriber), masalah yang banyak dicari (views), dan nilai unik (YouTube menolak konten berulang/rendah orisinalitas).`;
+
+const PROMPT_MENTAH = (sinyal, sudah) => `${DASAR}
+
+TUGAS: kamu PEMBUAT IDE. Dari SINYAL PERMINTAAN NYATA di bawah (pertanyaan forum, issue GitHub, video outlier, komentar penonton, rilis baru), buat 20 ide video mentah yang beragam.
 
 ATURAN
-- Minimal 8 dari 10 ide WAJIB memakai "bukti" berupa URL yang ADA di daftar sinyal (salin persis). Maks 2 ide boleh tanpa bukti, isi bukti "EKSPERIMEN".
-- Utamakan masalah yang banyak dialami pemula (angka tinggi), bisa dijelaskan 30–40 detik, dan bisa divisualkan dengan log serial, potongan kode, diagram, atau perbandingan X vs Y.
-- Campuran: ±5 seri A (Error Solver), ±2 seri B (Apa Itu), ±2 X vs Y, ±1 Umum. Minimal 1 ide berseri (punya part 2) untuk menarik subscriber.
+- Tiap ide sebisa mungkin memakai "bukti" = URL yang ADA di daftar sinyal (salin persis). Kalau tidak ada, tulis "EKSPERIMEN".
+- Masalah yang banyak dialami pemula, bisa dijelaskan 30–40 detik, bisa divisualkan dengan log serial, potongan kode (baris fix diketik), status, diagram alur, atau X vs Y.
+- Variasikan seri: A (Error Solver), B (Apa Itu), XvsY, Umum. Beberapa ide punya kelanjutan (part 2/3).
 - Jangan ulang topik yang sudah diproduksi: ${sudah.join('; ') || '-'}.
-- Akurasi: jangan mengarang nama error/fungsi. "tema" ditulis sebagai satu kalimat instruksi produksi yang jelas (topik + angle + inti fix/penjelasan).
-- Bahasa Indonesia.
+- Akurasi: jangan mengarang nama error/fungsi. Bahasa Indonesia.
 
-Jawab HANYA JSON array 10 objek, urut dari paling kuat:
-[{"judul":"≤60 karakter","seri":"A|B|XvsY|Umum","angle":"...","hook":"≤8 kata","bukti":"URL atau EKSPERIMEN","alasan":"1 kalimat kenapa permintaannya tinggi","skor":1-45,"tema":"satu kalimat untuk produksi"}]
+Jawab HANYA JSON array 20 objek:
+[{"judul":"≤60 karakter, kata kunci di depan","seri":"A|B|XvsY|Umum","angle":"sudut pandang, bukan cuma topik","hook":"≤8 kata","visual":"komponen utama","lanjutan":"ide part 2 atau -","bukti":"URL atau EKSPERIMEN","alasan":"1 kalimat kenapa permintaannya tinggi","tema":"satu kalimat instruksi produksi: topik + angle + inti fix/penjelasan"}]
 
 SINYAL:
-${sinyal.slice(0, 120).map((s, i) => `${i + 1}. [${s.sumber}] ${s.judul} — ${s.angka} — ${s.url}`).join('\n')}`;
+${sinyal.slice(0, 140).map((s, i) => `${i + 1}. [${s.sumber}] ${s.judul} — ${s.angka} — ${s.url}`).join('\n')}`;
 
-function ambilArray(teks) {
+const PROMPT_SARING = (mentah, analis, sel) => `${DASAR}
+
+TUGAS: kamu KRITIKUS sekaligus PEMIMPIN REDAKSI. Di bawah ada 20 IDE MENTAH, DATA ANALIS channel, dan SELERA OKTA (pemilik channel) dari Papan Ide sebelumnya.
+
+1. Nilai tiap ide 1–5 untuk: permintaan, persaingan (5 = sepi), celah, bisa_divisualkan, cocok_channel, umur_topik, risiko_rendah, dorong_subscriber, keaslian. Skor maks 45.
+2. Buang ide skor < 30, duplikat/mirip, klaim teknis yang meragukan, atau yang mirip ide yang pernah DITOLAK Okta. Utamakan pola ide yang DISETUJUI Okta.
+3. Pilih 10. Minimal 8 harus punya bukti URL (bukan EKSPERIMEN). Komposisi ±5 A, ±2 B, ±2 XvsY, ±1 Umum. Minimal 1 ide berseri.
+4. Urutkan sebagai JADWAL TAYANG: nomor 1–7 = Senin–Minggu (hindari dua topik mirip berurutan, ide terkuat di awal minggu), nomor 8–10 = cadangan.
+5. Tulis 2–3 catatan analis (pola dari data; tulis "[ASUMSI]" kalau videonya < 10 atau data kosong) dan 1 kalimat strategi minggu ini (apa yang diuji).
+6. Boleh merapikan judul/hook/tema, tapi JANGAN mengubah URL bukti.
+
+Jawab HANYA satu objek JSON:
+{"strategi":"...","catatan_analis":["..."],"ide":[{"hari":"Senin|...|Minggu|Cadangan","judul":"","seri":"","angle":"","hook":"","visual":"","lanjutan":"","bukti":"URL atau EKSPERIMEN","alasan":"","skor":{"permintaan":0,"persaingan":0,"celah":0,"bisa_divisualkan":0,"cocok_channel":0,"umur_topik":0,"risiko_rendah":0,"dorong_subscriber":0,"keaslian":0},"total":0,"perlu_dicek":"klaim yang harus dicek Okta atau -","tema":""}],"dibuang":[{"judul":"","alasan":"singkat"}]}
+
+IDE MENTAH:
+${JSON.stringify(mentah)}
+
+DATA ANALIS:
+${analis.slice(0, 9000)}
+
+SELERA OKTA (${sel.papan} papan direview):
+Disetujui: ${sel.disetujui.slice(0, 25).map((i) => i.tema).join(' || ') || 'belum ada data'}
+Ditolak: ${sel.ditolak.slice(0, 25).map((i) => i.tema + (i.alasan ? ` (alasan: ${i.alasan})` : '')).join(' || ') || 'belum ada data'}`;
+
+function ambilJsonDari(teks, buka, tutup) {
   const t = String(teks || '').replace(/```(?:json)?/gi, '');
-  const a = t.indexOf('['), b = t.lastIndexOf(']');
+  const a = t.indexOf(buka), b = t.lastIndexOf(tutup);
   if (a < 0 || b <= a) return null;
   try { return JSON.parse(t.slice(a, b + 1).replace(/,\s*([}\]])/g, '$1')); } catch { return null; }
 }
 
-async function susunIde(sinyal) {
+async function tanyaJson(prompt, cocok, label) {
   const key = (process.env.GEMINI_API_KEY || '').trim();
-  const prompt = PROMPT(sinyal, sudahDiproduksi());
   const catatan = [];
   for (const model of await pilihModel(key)) {
     for (let i = 1; i <= 2; i++) {
       const h = await tanyaGemini(key, model, prompt, false, { pikir: true });
-      const arr = h.teks && ambilArray(h.teks);
-      if (Array.isArray(arr) && arr.length) { log(`ide disusun oleh ${model}`); return { ide: arr.slice(0, 10), model }; }
+      const hasil = h.teks && cocok(h.teks);
+      if (hasil) { log(`${label}: ${model}`); return { hasil, model }; }
       catatan.push(`${model}: ${h.status || 'bukan JSON'} ${String(h.err || '').replace(/\s+/g, ' ').slice(0, 90)}`);
       if (h.status === 429) break;
       await new Promise((ok) => setTimeout(ok, 30000 * i)); // 503 = server Gemini sibuk, tunggu lebih lama
     }
   }
-  throw new Error('Gemini gagal menyusun ide: ' + catatan.join(' | '));
+  throw new Error(`Gemini gagal (${label}): ` + catatan.join(' | '));
+}
+
+async function susunIde(sinyal, teksAnalis, sel) {
+  const t1 = await tanyaJson(PROMPT_MENTAH(sinyal, sudahDiproduksi()), (t) => { const a = ambilJsonDari(t, '[', ']'); return Array.isArray(a) && a.length >= 10 ? a.slice(0, 24) : null; }, 'ide mentah');
+  try {
+    const t2 = await tanyaJson(PROMPT_SARING(t1.hasil, teksAnalis, sel), (t) => { const o = ambilJsonDari(t, '{', '}'); return o && Array.isArray(o.ide) && o.ide.length >= 5 ? o : null; }, 'kritikus');
+    return { ...t2.hasil, ide: t2.hasil.ide.slice(0, 10), model: `${t1.model} → kritikus ${t2.model}`, mentah: t1.hasil.length };
+  } catch (e) {
+    log('tahap kritikus gagal, pakai 10 ide mentah pertama:', e.message);
+    return { strategi: '-', catatan_analis: ['tahap kritikus gagal: ' + e.message.slice(0, 150)], ide: t1.hasil.slice(0, 10), dibuang: [], model: t1.model, mentah: t1.hasil.length };
+  }
 }
 
 /* ---------- dokumen ---------- */
-function tulisDokumen(ide, sinyal, model) {
+function tulisDokumen(p, sinyal, sel) {
   const urlAda = new Set(sinyal.map((s) => s.url));
   let berbukti = 0;
+  const ide = p.ide;
   const baris = [];
   baris.push(`PAPAN IDE 1HERTZ — minggu ${hariIni()}`);
   baris.push('');
   baris.push('CARA MEMILIH: ganti "[ ]" jadi "[x]" di depan ide yang kamu setujui (targetnya minimal 7).');
-  baris.push('Pipeline akan memproduksi 1 ide yang dicentang per hari, urut dari nomor terkecil, lalu mengunggahnya ke YouTube sebagai PRIVAT.');
+  baris.push('Yang kamu tolak: boleh isi "Alasan kalau ditolak:" — tim belajar dari situ minggu depan.');
+  baris.push('Saat SAKLAR mode Gemini HIDUP, pipeline memproduksi 1 ide yang dicentang per hari, urut dari nomor terkecil (1–7 = jadwal Senin–Minggu, 8–10 cadangan), lalu mengunggahnya sebagai PRIVAT.');
   baris.push('Boleh juga mengubah kalimat setelah "TEMA:" sebelum dicentang.');
+  baris.push('');
+  baris.push(`STRATEGI MINGGU INI: ${p.strategi || '-'}`);
+  for (const c of p.catatan_analis || []) baris.push(`Catatan analis: ${c}`);
+  if (sel.papan) {
+    const n = sel.disetujui.length + sel.ditolak.length;
+    baris.push(`Persetujuanmu di ${sel.papan} papan terakhir: ${sel.disetujui.length}/${n} (${Math.round((100 * sel.disetujui.length) / Math.max(n, 1))}%; target ≥ 70%)`);
+  }
   baris.push('');
   ide.forEach((d, i) => {
     const ok = d.bukti && urlAda.has(String(d.bukti).trim());
     if (ok) berbukti++;
+    const total = d.total ?? (d.skor && typeof d.skor === 'object' ? Object.values(d.skor).reduce((a, b) => a + Number(b || 0), 0) : d.skor);
     baris.push(`[ ] ${i + 1}. TEMA: ${String(d.tema || d.judul || '').replace(/\s+/g, ' ').trim()}`);
-    baris.push(`    Judul kerja: ${d.judul || '-'}  ·  Seri: ${d.seri || '-'}  ·  Skor: ${d.skor ?? '-'}/45`);
+    baris.push(`    Jadwal: ${d.hari || (i < 7 ? ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][i] : 'Cadangan')}  ·  Judul kerja: ${d.judul || '-'}  ·  Seri: ${d.seri || '-'}  ·  Skor: ${total ?? '-'}/45`);
     baris.push(`    Angle: ${d.angle || '-'}`);
-    baris.push(`    Hook: ${d.hook || '-'}`);
+    baris.push(`    Hook: ${d.hook || '-'}  ·  Visual: ${d.visual || '-'}`);
+    if (d.lanjutan && d.lanjutan !== '-') baris.push(`    Lanjutan seri: ${d.lanjutan}`);
     baris.push(`    Bukti permintaan: ${ok ? d.bukti : 'EKSPERIMEN (tanpa bukti dari data)'}`);
     baris.push(`    Alasan: ${d.alasan || '-'}`);
+    if (d.perlu_dicek && d.perlu_dicek !== '-') baris.push(`    Perlu dicek: ${d.perlu_dicek}`);
+    baris.push('    Alasan kalau ditolak: ');
     baris.push('');
   });
-  baris.splice(2, 0, `Ide berbukti: ${berbukti}/10 (target ≥ 8) · Sinyal dikumpulkan: ${sinyal.length} · Disusun oleh: ${model}`, '');
+  baris.splice(2, 0, `Ide berbukti: ${berbukti}/${ide.length} (target ≥ 8) · ${p.mentah} ide mentah disaring jadi ${ide.length} · Sinyal: ${sinyal.length} · Disusun oleh: ${p.model}`, '');
+  if ((p.dibuang || []).length) {
+    baris.push('— Dibuang kritikus —');
+    for (const d of p.dibuang.slice(0, 12)) baris.push(`• ${d.judul}: ${d.alasan}`);
+    baris.push('');
+  }
   baris.push('— Sinyal teratas yang dipakai —');
   sinyal.slice(0, 30).forEach((s) => baris.push(`• [${s.sumber}] ${s.judul} (${s.angka}) ${s.url}`));
   return { teks: baris.join('\n'), berbukti };
@@ -179,19 +268,40 @@ async function ideBerikut(token) {
   return null;
 }
 
-module.exports = { ideBerikut, tandaiTerpakai };
+module.exports = { ideBerikut, tandaiTerpakai, _uji: { tulisDokumen, PROMPT_MENTAH, PROMPT_SARING } };
 
 if (require.main === module) {
   (async () => {
     if (process.argv[2] !== 'buat') throw new Error('mode: buat');
-    const sinyal = await kumpulkanSinyal();
+    const notice = (judul, m) => { if (process.env.GITHUB_ACTIONS) console.log(`::notice title=${judul}::${String(m).replace(/[\r\n]+/g, ' ').slice(0, 450)}`); };
+    const token = await aksesToken();
+
+    // 1. Analis (tanpa AI) — selalu jalan, laporannya juga bisa dipakai saat kerja dengan Claude
+    let analis = null;
+    try {
+      analis = await kumpulkanAnalis(token);
+      const lap = await simpanLaporan(token, teksLaporan(analis));
+      notice('Laporan Analis', `akses ${analis.akses}, outlier ${analis.outlier.length}, komentar ${analis.komentarSendiri.length + analis.komentarOutlier.length} — ${lap.webViewLink || lap.id}${analis.catatan.length ? ' · ' + analis.catatan.join(' · ') : ''}`);
+    } catch (e) { log('analis gagal:', e.message); notice('Laporan Analis', 'gagal: ' + e.message); }
+
+    // 2. Saklar: jadwal otomatis hanya jalan kalau mode Gemini HIDUP; tombol Run workflow manual selalu jalan
+    const saklar = await modeGemini(token);
+    const manual = process.env.GITHUB_EVENT_NAME && process.env.GITHUB_EVENT_NAME !== 'schedule';
+    log(`mode Gemini: ${saklar.hidup ? 'HIDUP' : 'MATI'} (${saklar.sumber}) · dipicu: ${process.env.GITHUB_EVENT_NAME || 'lokal'}`);
+    if (!saklar.hidup && !manual) { notice('Papan Ide', 'dilewati: SAKLAR mode Gemini MATI (Laporan Analis tetap dibuat)'); return; }
+    const modePapan = process.env.MODE_PAPAN || 'penuh';
+    if (modePapan === 'analis') { notice('Papan Ide', 'dilewati: mode analis saja'); return; }
+
+    // 3. Papan Ide 2 tahap
+    const sinyal = await kumpulkanSinyal(analis);
     log(`sinyal: ${sinyal.length}`);
     if (sinyal.length < 10) throw new Error(`sinyal terlalu sedikit (${sinyal.length}); sumber mungkin sedang diblokir`);
-    const { ide, model } = await susunIde(sinyal);
-    const { teks, berbukti } = tulisDokumen(ide, sinyal, model);
-    const token = await aksesToken();
+    const sel = await selera(token);
+    const p = await susunIde(sinyal, analis ? teksLaporan(analis) : 'belum ada data', sel);
+    const { teks, berbukti } = tulisDokumen(p, sinyal, sel);
+    if (modePapan === 'uji') { console.log('===== PAPAN IDE (UJI, tidak disimpan) =====\n' + teks); notice('Papan Ide', `UJI: ${p.ide.length} ide (dari ${p.mentah} mentah), berbukti ${berbukti}/${p.ide.length}, ${p.model}`); return; }
     const doc = await simpanDoc(token, `Papan Ide ${hariIni()}`, teks);
-    console.log(`PAPAN=${doc.webViewLink || doc.id} berbukti=${berbukti}/10`);
-    if (process.env.GITHUB_ACTIONS) console.log(`::notice title=Papan Ide::${ide.length} ide, berbukti ${berbukti}/10 — ${doc.webViewLink || doc.id}`);
+    console.log(`PAPAN=${doc.webViewLink || doc.id} berbukti=${berbukti}/${p.ide.length}`);
+    notice('Papan Ide', `${p.ide.length} ide (dari ${p.mentah} mentah), berbukti ${berbukti}/${p.ide.length} — ${doc.webViewLink || doc.id}`);
   })().catch((e) => { console.error('[ide] ERROR:', e.message); if (process.env.GITHUB_ACTIONS) console.log(`::error title=Papan Ide::${e.message.slice(0, 400)}`); process.exit(1); });
 }

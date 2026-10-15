@@ -12,6 +12,7 @@ const { spawnSync } = require('child_process');
 const { cek } = require('./validasi');
 const { ekstrakJson, rapikan, dariTema } = require('./buat-konten');
 const { ideBerikut, tandaiTerpakai } = require('./papan-ide');
+const { modeGemini } = require('./saklar');
 
 const AKAR = path.resolve(__dirname, '..');
 const FOLDER = {
@@ -108,6 +109,19 @@ function catat(baris) {
   fs.appendFileSync(f, baris + '\n');
 }
 
+// Mode Gemini MATI: hanya JSON lengkap (dari Claude/template) yang diproses; dokumen berisi tema saja dibiarkan menunggu.
+async function bisaDiproses(token, files, hidup) {
+  if (hidup) return files;
+  const out = [];
+  for (const f of files) {
+    let isi;
+    try { isi = await bacaIsi(token, f); } catch { out.push(f); continue; }
+    if (ekstrakJson(isi) || /"adegan"\s*:/.test(isi)) { f.isi = isi; out.push(f); } // JSON (rusak pun diproses → masuk "gagal" dengan alasan)
+    else log(`menunggu mode Gemini HIDUP (isinya tema saja): ${f.name}`);
+  }
+  return out;
+}
+
 function keluaran(nama, nilai) {
   if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `${nama}=${nilai}\n`);
 }
@@ -121,18 +135,23 @@ async function modeCek() {
     return;
   }
   const token = await aksesToken();
-  const files = await daftarAntrian(token);
-  log(`antrian: ${files.length} file`);
+  const saklar = await modeGemini(token);
+  log(`mode Gemini: ${saklar.hidup ? 'HIDUP' : 'MATI'} (${saklar.sumber})`);
+  const files = await bisaDiproses(token, await daftarAntrian(token), saklar.hidup);
+  log(`antrian siap: ${files.length} file`);
   let ide = null;
-  if (!files.length) { try { ide = await ideBerikut(token); } catch (e) { log('cek Papan Ide gagal:', e.message); } }
+  if (!files.length && saklar.hidup) { try { ide = await ideBerikut(token); } catch (e) { log('cek Papan Ide gagal:', e.message); } }
   if (ide) log(`ide disetujui berikutnya: ${ide.nama}`);
   keluaran('ada', files.length > 0 || ide ? 'true' : 'false');
 }
 
 async function modeProses() {
   let token = await aksesToken();
-  const files = (await daftarAntrian(token)).slice(0, MAKS_VIDEO);
+  const saklar = await modeGemini(token);
+  log(`mode Gemini: ${saklar.hidup ? 'HIDUP' : 'MATI'} (${saklar.sumber})`);
+  const files = (await bisaDiproses(token, await daftarAntrian(token), saklar.hidup)).slice(0, MAKS_VIDEO);
   if (!files.length) {
+    if (!saklar.hidup) { log('antrian kosong (mode Gemini MATI: ide Papan Ide tidak diproduksi)'); return; }
     // antrian kosong → ambil 1 ide yang dicentang di Papan Ide (maks 1 per hari)
     const ide = await ideBerikut(token).catch(() => null);
     if (!ide) { log('antrian kosong, tidak ada ide disetujui yang menunggu'); return; }
@@ -145,12 +164,13 @@ async function modeProses() {
     if (f.ide) tandaiTerpakai(f.ide.kunci); // ditandai di awal supaya ide yang gagal tidak dicoba ulang tiap 5 menit (hemat kuota)
     let konten;
     try {
-      const isi = f.ide ? f.ide.tema : await bacaIsi(token, f);
+      const isi = f.ide ? f.ide.tema : f.isi ?? await bacaIsi(token, f);
       konten = ekstrakJson(isi);
       if (!konten) {
         // bukan JSON → anggap isinya tema, minta Gemini menulis naskah + JSON
         const tema = isi.replace(/\s+/g, ' ').trim();
         if (tema.length < 4) throw new Error('file kosong');
+        if (!saklar.hidup) throw new Error('mode Gemini MATI, tema tidak ditulis'); // pengaman; seharusnya sudah disaring
         log(`tema: "${tema.slice(0, 80)}" → Gemini membuat konten`);
         konten = await dariTema(tema);
       }

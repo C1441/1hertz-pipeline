@@ -4,7 +4,13 @@ on:
   schedule:
     # Senin 06:07 WIB (Minggu 23:07 UTC)
     - cron: '7 23 * * 0'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'penuh = buat Papan Ide baru · analis = Laporan Analis saja · uji = Papan Ide tidak disimpan (cuma di log)'
+        type: choice
+        options: [penuh, analis, uji]
+        default: penuh
 
 permissions:
   contents: read
@@ -18,11 +24,13 @@ jobs:
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}   # opsional
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MODE_PAPAN: ${{ inputs.mode || 'penuh' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Susun Papan Ide (sinyal forum/GitHub/Reddit → Gemini → Google Docs di 1Hertz/ide)
+      - name: Laporan Analis (selalu) + Papan Ide 2 tahap (kalau SAKLAR HIDUP atau dijalankan manual)
         run: node pipeline/papan-ide.js buat
