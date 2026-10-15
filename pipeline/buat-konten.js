@@ -83,6 +83,7 @@ const PIKIR_TIDAK_DIDUKUNG = new Set();
 async function tanyaGemini(key, model, teks, cari, opsi = {}) {
   const pikir = opsi.pikir && !PIKIR_TIDAK_DIDUKUNG.has(model);
   const gc = { temperature: opsi.temperature ?? 0.7 };
+  if (opsi.json && !cari) gc.responseMimeType = 'application/json'; // paksa keluaran JSON valid
   if (pikir) gc.thinkingConfig = /gemini-2\./.test(model) ? { thinkingBudget: -1 } : { thinkingLevel: 'high' };
   const body = { contents: [{ role: 'user', parts: [{ text: teks }] }], generationConfig: gc };
   if (cari) body.tools = [{ google_search: {} }];
@@ -119,7 +120,7 @@ async function dariTema(tema) {
     for (const cari of bolehCari ? [true, false] : [false]) {
       let h;
       for (let i = 1; i <= 3; i++) {
-        h = await tanyaGemini(key, model, prompt, cari, { pikir: true });
+        h = await tanyaGemini(key, model, prompt, cari, { pikir: true, json: !cari });
         if (h.status !== 503 && h.status !== 500 && h.status !== 0) break;
         log(`${model}: ${h.status}, tunggu lalu coba lagi (${i}/3)`);
         await new Promise((ok) => setTimeout(ok, 15000 * i));
@@ -156,7 +157,7 @@ Jawab HANYA JSON lengkap hasil perbaikan.
 JSON:
 ${JSON.stringify(k)}`;
   for (let i = 1; i <= 2; i++) {
-    const h = await tanyaGemini(key, model, prompt, false, { pikir: true, temperature: 0.2 });
+    const h = await tanyaGemini(key, model, prompt, false, { pikir: true, temperature: 0.2, json: true });
     const baru = h.teks && ekstrakJson(h.teks);
     if (baru && Array.isArray(baru.adegan) && baru.adegan.length === k.adegan.length && baru.publikasi) {
       baru.id = k.id; baru._dibuat_oleh = model;

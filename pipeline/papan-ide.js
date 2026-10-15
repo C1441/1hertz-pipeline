@@ -159,7 +159,7 @@ async function tanyaJson(prompt, cocok, label) {
   const catatan = [];
   for (const model of await pilihModel(key)) {
     for (let i = 1; i <= 2; i++) {
-      const h = await tanyaGemini(key, model, prompt, false, { pikir: true });
+      const h = await tanyaGemini(key, model, prompt, false, { pikir: true, json: true });
       const hasil = h.teks && cocok(h.teks);
       if (hasil) { log(`${label}: ${model}`); return { hasil, model }; }
       catatan.push(`${model}: ${h.status || 'bukan JSON'} ${String(h.err || '').replace(/\s+/g, ' ').slice(0, 90)}`);
@@ -177,6 +177,7 @@ async function susunIde(sinyal, teksAnalis, sel) {
     return { ...t2.hasil, ide: t2.hasil.ide.slice(0, 10), model: `${t1.model} → kritikus ${t2.model}`, mentah: t1.hasil.length };
   } catch (e) {
     log('tahap kritikus gagal, pakai 10 ide mentah pertama:', e.message);
+    if (process.env.GITHUB_ACTIONS) console.log(`::warning title=Kritikus Papan Ide::${e.message.replace(/[\r\n]+/g, ' ').slice(0, 400)}`);
     return { strategi: '-', catatan_analis: ['tahap kritikus gagal: ' + e.message.slice(0, 150)], ide: t1.hasil.slice(0, 10), dibuang: [], model: t1.model, mentah: t1.hasil.length };
   }
 }
@@ -227,9 +228,9 @@ function tulisDokumen(p, sinyal, sel) {
   return { teks: baris.join('\n'), berbukti };
 }
 
-async function simpanDoc(token, nama, teks) {
+async function simpanDoc(token, nama, teks, folder = FOLDER_IDE) {
   const batas = 'batas1hertz' + Date.now();
-  const meta = { name: nama, parents: [FOLDER_IDE], mimeType: 'application/vnd.google-apps.document' };
+  const meta = { name: nama, parents: [folder], mimeType: 'application/vnd.google-apps.document' };
   const body = `--${batas}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${batas}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n${teks}\r\n--${batas}--`;
   const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink', {
     method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': `multipart/related; boundary=${batas}` }, body,
@@ -299,7 +300,7 @@ if (require.main === module) {
     const sel = await selera(token);
     const p = await susunIde(sinyal, analis ? teksLaporan(analis) : 'belum ada data', sel);
     const { teks, berbukti } = tulisDokumen(p, sinyal, sel);
-    if (modePapan === 'uji') { console.log('===== PAPAN IDE (UJI, tidak disimpan) =====\n' + teks); notice('Papan Ide', `UJI: ${p.ide.length} ide (dari ${p.mentah} mentah), berbukti ${berbukti}/${p.ide.length}, ${p.model}`); return; }
+    if (modePapan === 'uji') { await simpanDoc(token, `UJI Papan Ide ${hariIni()} (boleh dihapus)`, teks, process.env.FOLDER_LAPORAN || '1LU87JTaLQfl-2aY0HC4BiDtXkHnK8JEE'); notice('Papan Ide', `UJI: ${p.ide.length} ide (dari ${p.mentah} mentah), berbukti ${berbukti}/${p.ide.length}, ${p.model}`); return; }
     const doc = await simpanDoc(token, `Papan Ide ${hariIni()}`, teks);
     console.log(`PAPAN=${doc.webViewLink || doc.id} berbukti=${berbukti}/${p.ide.length}`);
     notice('Papan Ide', `${p.ide.length} ide (dari ${p.mentah} mentah), berbukti ${berbukti}/${p.ide.length} — ${doc.webViewLink || doc.id}`);
