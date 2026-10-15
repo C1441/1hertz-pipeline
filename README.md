@@ -30,3 +30,13 @@ Rahasia tidak pernah ditulis ke repo atau dicetak di log.
 - **JSON masuk folder `gagal`**: alasannya ada di `log/riwayat.md`. Setelah diperbaiki, salin lagi ke `antrian`.
 - **Jadwal berhenti sendiri**: GitHub mematikan jadwal repo publik yang 60 hari tanpa aktivitas. Buka tab Actions → workflow → **Enable workflow**.
 - **Laptop (n8n) jangan dinyalakan bersamaan** dengan workflow ini, supaya satu JSON tidak diproses dua kali.
+
+## Mode Gemini, revisi, ON AIR (Okt 2026)
+- **Saklar**: Google Doc `SAKLAR 1Hertz` di folder 1Hertz. `MODE GEMINI: MATI` (default, kerja dengan Claude) atau `HIDUP` (tanpa Claude).
+  MATI → Papan Ide terjadwal, ide centangan, dokumen tema, dan dokumen REVISI menunggu; JSON lengkap tetap diproduksi.
+- **Laporan Analis** (tanpa AI) dibuat tiap Senin di folder laporan. Butuh izin `youtube.readonly` + `yt-analytics.readonly` di refresh token, atau secret `YOUTUBE_API_KEY`.
+- **Papan Ide 2 tahap**: 20 ide mentah → kritikus memilih 10 + jadwal + strategi; belajar dari centang & "Alasan kalau ditolak".
+  Run workflow manual: `penuh` / `analis` / `uji`.
+- **ON AIR**: tiap video yang terunggah disalin ke `aset/ON AIR` (`<id> (<idYouTube>).mp4`) + dokumen `— NASKAH` (JSON).
+- **Revisi**: (a) Gemini, mode HIDUP: Google Doc di antrian berisi `REVISI <id atau idYouTube>: instruksi`; (b) tanpa AI: salin dokumen NASKAH, edit, pindah ke antrian. Hasilnya video privat baru `<id>-r2`, `-r3`, …; video lama dihapus manual di YouTube Studio.
+- Jadwal cron GitHub kenyataannya tiap ±1–5 jam; untuk langsung, Actions → Produksi → Run workflow.
