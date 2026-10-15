@@ -107,9 +107,17 @@ async function dariTema(tema) {
   if (!key) throw new Error('GEMINI_API_KEY belum ada');
   const prompt = `${PROMPT}${tema.trim()}\n\n(Tanggal hari ini: ${hariIni()}. Riset dulu fakta teknisnya sebelum menulis.)`;
   const catatan = [];
+  let bolehCari = process.env.KONTEN_TANPA_SEARCH !== '1';
   for (const model of await pilihModel(key)) {
-    for (const cari of [true, false]) {
-      const h = await tanyaGemini(key, model, prompt, cari);
+    for (const cari of bolehCari ? [true, false] : [false]) {
+      let h;
+      for (let i = 1; i <= 3; i++) {
+        h = await tanyaGemini(key, model, prompt, cari);
+        if (h.status !== 503 && h.status !== 500 && h.status !== 0) break;
+        log(`${model}: ${h.status}, tunggu lalu coba lagi (${i}/3)`);
+        await new Promise((ok) => setTimeout(ok, 15000 * i));
+      }
+      if (cari && h.status === 429) { bolehCari = false; catatan.push(`${model}+search: 429`); continue; } // Google Search tidak ada di kuota gratis
       if (h.teks) {
         const k = ekstrakJson(h.teks);
         if (k) {
@@ -119,7 +127,7 @@ async function dariTema(tema) {
           return k;
         }
         catatan.push(`${model}: jawaban bukan JSON`);
-      } else catatan.push(`${model}${cari ? '+search' : ''}: ${h.status} ${String(h.err).replace(/\s+/g, ' ').slice(0, 120)}`);
+      } else catatan.push(`${model}${cari ? '+search' : ''}: ${h.status} ${(/"message":\s*"([^"]{0,70})/.exec(String(h.err)) || [])[1] || String(h.err).slice(0, 70)}`);
       if (h.status === 429 && !cari) break; // kuota model ini habis; kalau 429 cuma karena Google Search, coba tanpa search
     }
   }
