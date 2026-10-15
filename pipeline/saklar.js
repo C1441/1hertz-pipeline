@@ -16,7 +16,7 @@ const RE = /MODE\s*GEMINI\s*:\s*(HIDUP|NYALA|ON|AKTIF|MATI|OFF|NONAKTIF)/i;
 
 const ISI_AWAL = `MODE GEMINI: MATI
 
-Cara pakai: ganti kata MATI di baris pertama menjadi HIDUP (atau sebaliknya). Tidak perlu tombol lain; perubahan terbaca dalam ±5 menit.
+Cara pakai: ganti kata MATI di baris pertama menjadi HIDUP (atau sebaliknya). Tidak perlu tombol lain; perubahan terbaca saat GitHub menjalankan pengecekan berikutnya (jadwal GitHub kenyataannya tiap ±1–5 jam; mau langsung: GitHub → Actions → "Produksi video 1Hertz" → Run workflow).
 
 HIDUP = mode tanpa Claude. Gemini (key milikmu, gratis) bekerja otomatis:
   • Senin pagi Gemini menyusun Papan Ide 10 ide di folder 1Hertz/ide
