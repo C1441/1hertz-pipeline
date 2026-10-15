@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { cek } = require('./validasi');
-const { ekstrakJson, rapikan, dariTema } = require('./buat-konten');
+const { ekstrakJson, rapikan, dariTema, revisiKonten } = require('./buat-konten');
 const { ideBerikut, tandaiTerpakai } = require('./papan-ide');
 const { modeGemini } = require('./saklar');
 
@@ -19,7 +19,9 @@ const FOLDER = {
   antrian: process.env.FOLDER_ANTRIAN || '19TQHoFX2Ri5K7pkED0jgqgykqOiyvxCn',
   selesai: process.env.FOLDER_SELESAI || '1d1Zf46yu4L_VzxPwN_5R3JG4U-KOfnT6',
   gagal: process.env.FOLDER_GAGAL || '1tpP_grzjp389ydfK4ZdFab8C8_yx3NHw',
+  aset: process.env.FOLDER_ASET || '1WVz9uNojBXOHFfiDKiFbN0rE6KBsT75l',
 };
+const RE_REVISI = /^\s*REVISI\s+([\w-]{6,})\s*[:\-–]?\s*([\s\S]*)$/i;
 const URL_TOKEN = process.env.GOOGLE_TOKEN_URL || 'https://oauth2.googleapis.com/token';
 const URL_DRIVE = process.env.GOOGLE_DRIVE_URL || 'https://www.googleapis.com/drive/v3';
 const URL_UPLOAD = process.env.GOOGLE_UPLOAD_URL || 'https://www.googleapis.com/upload/youtube/v3';
@@ -102,6 +104,51 @@ async function uploadYouTube(token, fileVideo, meta) {
   return j.id;
 }
 
+/* ---------- folder aset/ON AIR: video yang berhasil diunggah + naskahnya (bahan revisi) ---------- */
+async function folderOnAir(token) {
+  const q = encodeURIComponent(`'${FOLDER.aset}' in parents and trashed = false and mimeType = 'application/vnd.google-apps.folder' and name = 'ON AIR'`);
+  const ada = ((await (await google(token, `${URL_DRIVE}/files?q=${q}&fields=files(id)&pageSize=1`)).json()).files || [])[0];
+  if (ada) return ada.id;
+  const r = await google(token, `${URL_DRIVE}/files?fields=id`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'ON AIR', parents: [FOLDER.aset], mimeType: 'application/vnd.google-apps.folder' }) });
+  return (await r.json()).id;
+}
+
+async function simpanOnAir(token, fileVideo, konten, idYt) {
+  const folder = await folderOnAir(token);
+  const dasar = `${konten.id} (${idYt})`;
+  const ukuran = fs.statSync(fileVideo).size;
+  const awal = await google(token, 'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json; charset=UTF-8', 'X-Upload-Content-Type': 'video/mp4', 'X-Upload-Content-Length': String(ukuran) },
+    body: JSON.stringify({ name: `${dasar}.mp4`, parents: [folder], description: `${konten.publikasi?.judul || ''} · https://youtu.be/${idYt}` }),
+  });
+  const r = await fetchUlang(awal.headers.get('location'), { method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'video/mp4', 'Content-Length': String(ukuran) }, body: fs.readFileSync(fileVideo) });
+  if (!r.ok) throw new Error(`simpan video ke ON AIR gagal (${r.status})`);
+  const kepala = `NASKAH 1Hertz — ${konten.publikasi?.judul || konten.id}\nYouTube: https://youtu.be/${idYt}\n\n` +
+    `REVISI TANPA AI: buat salinan dokumen ini, ubah teks di dalamnya (jangan hapus tanda kurung kurawal dan tanda kutip), lalu pindahkan salinannya ke folder antrian.\n` +
+    `REVISI DENGAN GEMINI (mode HIDUP): buat Google Dokumen baru di folder antrian berisi: REVISI ${konten.id}: instruksi revisimu\n\n`;
+  const batas = 'naskah' + Date.now();
+  const meta = { name: `${dasar} — NASKAH`, parents: [folder], mimeType: 'application/vnd.google-apps.document' };
+  const body = `--${batas}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${batas}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n${kepala}${JSON.stringify(konten, null, 2)}\r\n--${batas}--`;
+  await google(token, 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${batas}` }, body });
+}
+
+// Ambil naskah terakhir dari ON AIR untuk kunci (id konten atau id YouTube), lalu Gemini menerapkan revisinya.
+async function dariRevisi(token, kunci, instruksi) {
+  if (instruksi.replace(/\s+/g, '').length < 4) throw new Error('instruksi revisi kosong');
+  const folder = await folderOnAir(token);
+  const q = encodeURIComponent(`'${folder}' in parents and trashed = false and mimeType = 'application/vnd.google-apps.document' and name contains '${kunci.replace(/'/g, '')}'`);
+  const f = ((await (await google(token, `${URL_DRIVE}/files?q=${q}&orderBy=createdTime desc&fields=files(id,name)&pageSize=5`)).json()).files || [])[0];
+  if (!f) throw new Error(`naskah "${kunci}" tidak ditemukan di aset/ON AIR (pakai id konten atau id YouTube dari nama file di sana)`);
+  const asal = ekstrakJson(await bacaIsi(token, { id: f.id, mimeType: 'application/vnd.google-apps.document' }));
+  if (!asal) throw new Error(`naskah ${f.name} rusak (bukan JSON)`);
+  const m = /^(.*?)(?:-r(\d+))?$/.exec(asal.id);
+  const baru = await revisiKonten(asal, instruksi.trim());
+  baru.id = `${m[1]}-r${(Number(m[2]) || 1) + 1}`;
+  log(`revisi ${asal.id} → ${baru.id}`);
+  return baru;
+}
+
 function catat(baris) {
   const f = path.join(AKAR, 'log', 'riwayat.md');
   fs.mkdirSync(path.dirname(f), { recursive: true });
@@ -166,6 +213,13 @@ async function modeProses() {
     try {
       const isi = f.ide ? f.ide.tema : f.isi ?? await bacaIsi(token, f);
       konten = ekstrakJson(isi);
+      const rev = !konten && RE_REVISI.exec(isi.replace(/^\uFEFF/, ''));
+      if (rev) {
+        if (!saklar.hidup) throw new Error('mode Gemini MATI, revisi tidak diproses'); // pengaman; seharusnya sudah disaring
+        log(`revisi untuk ${rev[1]} → Gemini menerapkan instruksi`);
+        konten = await dariRevisi(token, rev[1], rev[2]);
+        f.revisi = rev[1];
+      }
       if (!konten) {
         // bukan JSON → anggap isinya tema, minta Gemini menulis naskah + JSON
         const tema = isi.replace(/\s+/g, ' ').trim();
@@ -205,7 +259,10 @@ async function modeProses() {
       const idYt = await uploadYouTube(tokenBaru, fileVideo, v);
       await pindah(tokenBaru, f.id, 'selesai');
       log(`selesai: https://youtu.be/${idYt} (produksi ${menit} menit)`);
-      catat(`| ${waktu} | ${f.name}${f.ide ? ` [${f.ide.hari}]` : ''} | privat ✅ | ${idYt} | produksi ${menit} menit |`);
+      let onAir = 'ON AIR ✅';
+      try { await simpanOnAir(tokenBaru, fileVideo, JSON.parse(fs.readFileSync(fileJson, 'utf8')), idYt); }
+      catch (e) { onAir = 'ON AIR gagal'; log('simpan ke ON AIR gagal:', e.message); if (process.env.GITHUB_ACTIONS) console.log(`::warning title=ON AIR::${e.message.slice(0, 300)}`); }
+      catat(`| ${waktu} | ${f.name}${f.ide ? ` [${f.ide.hari}]` : ''} | privat ✅ | ${idYt} | produksi ${menit} menit · ${onAir}${f.revisi ? ` · revisi dari ${f.revisi}` : ''} |`);
       keluaran('video_terakhir', idYt);
     } catch (e) {
       log('upload gagal:', e.message); galat('upload gagal: ' + e.message);

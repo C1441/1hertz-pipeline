@@ -71,7 +71,7 @@ async function pilihModel(key) {
       .filter((n) => /^gemini-/.test(n) && !/(tts|image|live|embed|audio|vision|robotics|computer|thinking-exp|nano)/.test(n) && /(flash|pro)/.test(n));
     const versi = (n) => { const m = /gemini-(\d+(?:\.\d+)?)/.exec(n); return m ? parseFloat(m[1]) : 0; };
     const skor = (n) => versi(n) * 10 + (/flash/.test(n) ? 3 : /pro/.test(n) ? 1 : 0) - (/lite/.test(n) ? 1 : 0) - (/preview|exp/.test(n) ? 0.5 : 0);
-    modelCache = nama.sort((a, b) => skor(b) - skor(a)).slice(0, 4);
+    modelCache = nama.sort((a, b) => skor(b) - skor(a)).slice(0, 6); // lebih banyak cadangan: kuota gratis dihitung per model
   } catch (e) { log('gagal daftar model:', e.message); modelCache = []; }
   if (!modelCache.length) modelCache = ['gemini-2.5-flash'];
   return modelCache;
@@ -175,4 +175,39 @@ ${JSON.stringify(k)}`;
   return k;
 }
 
-module.exports = { ekstrakJson, rapikan, dariTema, pilihModel, tanyaGemini };
+// Revisi dari Okta (mode Gemini): terapkan HANYA perubahan yang diminta pada JSON konten yang sudah jadi.
+async function revisiKonten(asal, instruksi) {
+  const key = (process.env.GEMINI_API_KEY || '').trim();
+  if (!key) throw new Error('GEMINI_API_KEY belum ada');
+  const prompt = `Kamu editor konten YouTube Shorts "1Hertz". Di bawah ada JSON konten video yang SUDAH JADI dan INSTRUKSI REVISI dari pemilik channel.
+ATURAN
+- Terapkan HANYA perubahan yang diminta. Bagian lain jangan diubah sedikit pun (kata, urutan, data, kode, publikasi).
+- Kalau revisi mengubah voiceover: samakan naskah.voiceover_lengkap, jaga total 70–95 kata, waktu adegan tetap nyambung mulai 0, kata_kunci harus ada di voiceover adegannya.
+- Kalau instruksi membuat klaim teknis yang meragukan, tetap ikuti tapi tulis di qa.perlu_dicek.
+- Jangan ubah id dan nama field. Tambahkan field "revisi":{"instruksi":"salinan instruksi","diubah":["ringkas apa saja yang diubah"]}.
+Jawab HANYA JSON lengkap hasil revisi.
+
+INSTRUKSI REVISI:
+${instruksi}
+
+JSON:
+${JSON.stringify(asal)}`;
+  const catatan = [];
+  for (const model of await pilihModel(key)) {
+    for (let i = 1; i <= 3; i++) {
+      const h = await tanyaGemini(key, model, prompt, false, { pikir: true, temperature: 0.2, json: true });
+      const baru = h.teks && ekstrakJson(h.teks);
+      if (baru && Array.isArray(baru.adegan) && baru.adegan.length && baru.publikasi) {
+        baru.id = asal.id; baru._dibuat_oleh = model;
+        log(`revisi oleh ${model}: ${(baru.revisi?.diubah || []).join('; ').slice(0, 200)}`);
+        return baru;
+      }
+      catatan.push(`${model}: ${h.status || 'hasil tidak valid'} ${String(h.err || '').slice(0, 80)}`);
+      if (h.status === 429) break;
+      await new Promise((ok) => setTimeout(ok, 20000 * i));
+    }
+  }
+  throw new Error('Gemini gagal merevisi: ' + catatan.join(' | ').slice(0, 300));
+}
+
+module.exports = { ekstrakJson, rapikan, dariTema, pilihModel, tanyaGemini, revisiKonten };
