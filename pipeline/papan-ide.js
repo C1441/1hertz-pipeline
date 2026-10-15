@@ -104,7 +104,7 @@ async function susunIde(sinyal) {
       if (Array.isArray(arr) && arr.length) { log(`ide disusun oleh ${model}`); return { ide: arr.slice(0, 10), model }; }
       catatan.push(`${model}: ${h.status || 'bukan JSON'}`);
       if (h.status === 429) break;
-      await new Promise((ok) => setTimeout(ok, 10000 * i));
+      await new Promise((ok) => setTimeout(ok, 30000 * i)); // 503 = server Gemini sibuk, tunggu lebih lama
     }
   }
   throw new Error('Gemini gagal menyusun ide: ' + catatan.join(' | '));
