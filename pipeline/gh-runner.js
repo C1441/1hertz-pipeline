@@ -11,6 +11,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const { cek } = require('./validasi');
 const { ekstrakJson, rapikan, dariTema } = require('./buat-konten');
+const { ideBerikut, tandaiTerpakai } = require('./papan-ide');
 
 const AKAR = path.resolve(__dirname, '..');
 const FOLDER = {
@@ -78,6 +79,7 @@ async function bacaIsi(token, f) {
 }
 
 async function pindah(token, fileId, ke) {
+  if (!fileId) return; // ide dari Papan Ide: tidak ada file antrian
   await google(token, `${URL_DRIVE}/files/${fileId}?addParents=${FOLDER[ke]}&removeParents=${FOLDER.antrian}&supportsAllDrives=true&fields=id`, { method: 'PATCH' });
 }
 
@@ -121,20 +123,29 @@ async function modeCek() {
   const token = await aksesToken();
   const files = await daftarAntrian(token);
   log(`antrian: ${files.length} file`);
-  keluaran('ada', files.length > 0 ? 'true' : 'false');
+  let ide = null;
+  if (!files.length) { try { ide = await ideBerikut(token); } catch (e) { log('cek Papan Ide gagal:', e.message); } }
+  if (ide) log(`ide disetujui berikutnya: ${ide.nama}`);
+  keluaran('ada', files.length > 0 || ide ? 'true' : 'false');
 }
 
 async function modeProses() {
   let token = await aksesToken();
   const files = (await daftarAntrian(token)).slice(0, MAKS_VIDEO);
-  if (!files.length) { log('antrian kosong'); return; }
+  if (!files.length) {
+    // antrian kosong → ambil 1 ide yang dicentang di Papan Ide (maks 1 per hari)
+    const ide = await ideBerikut(token).catch(() => null);
+    if (!ide) { log('antrian kosong, tidak ada ide disetujui yang menunggu'); return; }
+    files.push({ id: null, name: ide.nama, ide });
+  }
   let gagalAda = false;
   for (const f of files) {
     const waktu = new Date().toISOString().slice(0, 16).replace('T', ' ');
     log(`memproses ${f.name}`);
+    if (f.ide) tandaiTerpakai(f.ide.kunci); // ditandai di awal supaya ide yang gagal tidak dicoba ulang tiap 5 menit (hemat kuota)
     let konten;
     try {
-      const isi = await bacaIsi(token, f);
+      const isi = f.ide ? f.ide.tema : await bacaIsi(token, f);
       konten = ekstrakJson(isi);
       if (!konten) {
         // bukan JSON → anggap isinya tema, minta Gemini menulis naskah + JSON
@@ -174,7 +185,7 @@ async function modeProses() {
       const idYt = await uploadYouTube(tokenBaru, fileVideo, v);
       await pindah(tokenBaru, f.id, 'selesai');
       log(`selesai: https://youtu.be/${idYt} (produksi ${menit} menit)`);
-      catat(`| ${waktu} | ${f.name} | privat ✅ | ${idYt} | produksi ${menit} menit |`);
+      catat(`| ${waktu} | ${f.name}${f.ide ? ` [${f.ide.hari}]` : ''} | privat ✅ | ${idYt} | produksi ${menit} menit |`);
       keluaran('video_terakhir', idYt);
     } catch (e) {
       log('upload gagal:', e.message); galat('upload gagal: ' + e.message);

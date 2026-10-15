@@ -24,6 +24,7 @@ jobs:
       GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       RENDER_CONCURRENCY: '4'
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -74,7 +75,7 @@ jobs:
           if [ -n "$(git status --porcelain log)" ]; then
             git config user.name "1hertz-bot"
             git config user.email "1hertz-bot@users.noreply.github.com"
-            git add log/riwayat.md
+            git add log
             git commit -m "log: produksi $(date -u +%Y-%m-%dT%H:%MZ)"
             git push
           fi

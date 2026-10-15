@@ -134,4 +134,4 @@ async function dariTema(tema) {
   throw new Error('Gemini gagal membuat konten: ' + catatan.join(' | '));
 }
 
-module.exports = { ekstrakJson, rapikan, dariTema };
+module.exports = { ekstrakJson, rapikan, dariTema, pilihModel, tanyaGemini };
