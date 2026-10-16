@@ -131,7 +131,7 @@ const buatFrasa = (adegan: AdeganSub[]) => {
   }
   return out;
 };
-const Subtitle: React.FC<{ t: number; adegan: AdeganSub[] }> = ({ t, adegan }) => {
+export const Subtitle: React.FC<{ t: number; adegan: AdeganSub[] }> = ({ t, adegan }) => {
   const frasa = React.useMemo(() => buatFrasa(adegan), [adegan]);
   let idx = 0;
   frasa.forEach((f, i) => {
