@@ -1,0 +1,95 @@
+{
+  "versi_skema": "1.0",
+  "id": "2026-10-16-baud-serial-monitor",
+  "dibuat": "2026-10-16T09:00:00+07:00",
+  "tema": "Serial Monitor keluar huruf aneh karena baud rate beda",
+  "status": "siap_produksi",
+  "kelayakan": { "keputusan": "lanjut", "alasan": "Masalah pemula yang sangat sering ditanyakan; visual sinyal yang dibaca salah memberi penjelasan yang jarang ada." },
+  "strategi": { "seri": "A", "takeaway": "Angka di Serial.begin harus sama dengan baud di Serial Monitor.", "target_penonton": "Pemula Arduino/ESP32" },
+  "naskah": {
+    "voiceover_lengkap": "Serial Monitor-mu cuma keluar huruf aneh kayak gini? Itu bukan error kode. Itu baud rate yang beda. Baud itu kecepatan kirim data. Board kirim 115200, monitor baca di 9600. Bit-nya kebaca salah, jadilah sampah. Aturannya: angka di Serial.begin harus sama dengan angka di Serial Monitor. Tiap board beda kebiasaan. Contoh Arduino pakai 9600, log boot ESP32 115200, ESP8266 malah 74880. Board USB native kayak Leonardo? Baud-nya nggak ngaruh. Samakan angkanya, teks langsung terbaca. Board-mu pakai baud berapa? Tulis di komentar.",
+    "durasi_detik": 37
+  },
+  "adegan": [
+    {
+      "no": 1, "mulai": 0, "selesai": 3,
+      "voiceover": "Serial Monitor-mu cuma keluar huruf aneh kayak gini?",
+      "teks_layar": "Serial Monitor isinya huruf aneh?",
+      "judul": ["Serial Monitor", "isinya huruf aneh?"], "warna_judul": "merah",
+      "kata_kunci": "aneh",
+      "komponen": "log_serial",
+      "data": { "judul": "Serial Monitor", "baud": "9600 baud", "error": true, "sorot": [3], "baris": ["ÿþÐø¤§x~ÎÕ¬®¿÷ÆËñ¦¨", "x~ÎÕ ¬®¿÷Æ Ëñ¦¨°±µ¶×ßå", "ÆËñ¦¨°±µ¶×ßåÿþÐø¤§ x~ÎÕ¬®", "¿÷ÆËñ ¦¨°±µ¶×ßåÿþ"] }
+    },
+    {
+      "no": 2, "mulai": 3, "selesai": 7,
+      "voiceover": "Itu bukan error kode. Itu baud rate yang beda.",
+      "teks_layar": "Bukan error kode, baud-nya beda",
+      "judul": ["Bukan error kode,", "baud-nya beda"], "warna_judul": "amber",
+      "hantaman": "BAUD.",
+      "kata_kunci": "baud",
+      "komponen": "kartu_kode",
+      "data": { "bahasa": "cpp", "kode": "void setup() {\n  Serial.begin(115200);\n}\nvoid loop() {\n  Serial.println(\"Hi\");\n}", "sorot_baris": [2] }
+    },
+    {
+      "no": 3, "mulai": 7, "selesai": 14,
+      "voiceover": "Baud itu kecepatan kirim data. Board kirim 115200, monitor baca di 9600. Bit-nya kebaca salah, jadilah sampah.",
+      "judul": ["Dibaca terlalu lambat,", "bit-nya meleset"], "warna_judul": "merah",
+      "kata_kunci": "salah",
+      "komponen": "sinyal",
+      "data": { "label": "Sinyal TX · 115200 baud", "teks": "Hi", "catatan": "dibaca 115200 → “Hi”", "salah": true, "label_salah": "Dibaca di 9600 · 12× lebih lambat", "hasil_salah": "ÿ" }
+    },
+    {
+      "no": 4, "mulai": 14, "selesai": 20,
+      "voiceover": "Aturannya: angka di Serial.begin harus sama dengan angka di Serial Monitor.",
+      "judul": ["Angkanya", "harus sama"], "warna_judul": "cyan",
+      "kata_kunci": "sama",
+      "komponen": "kartu_status",
+      "data": { "label": "Baud Serial Monitor", "urutan_status": ["9600", "115200"], "warna": ["merah", "hijau"] }
+    },
+    {
+      "no": 5, "mulai": 20, "selesai": 28,
+      "voiceover": "Tiap board beda kebiasaan. Contoh Arduino pakai 9600, log boot ESP32 115200, ESP8266 malah 74880.",
+      "judul": ["Tiap board", "beda kebiasaan"], "warna_judul": "cyan",
+      "kata_kunci": "74880",
+      "komponen": "lembar",
+      "data": { "kode": "LEMBAR 3-A", "judul": "Baud bawaan", "sub": "Cek sebelum buka Serial Monitor", "kolom": ["Board · konteks", "Baud"], "baris": [
+        { "nama": "Arduino Uno", "ket": "Serial.begin di contoh resmi", "nilai": "9600" },
+        { "nama": "ESP32", "ket": "log boot ROM", "nilai": "115200" },
+        { "nama": "ESP8266", "ket": "log boot ROM", "nilai": "74880", "warna": "amber", "catatan": "angka tak biasa" }
+      ], "sumber": "Arduino Docs · Espressif esptool docs" }
+    },
+    {
+      "no": 6, "mulai": 28, "selesai": 32,
+      "voiceover": "Board USB native kayak Leonardo? Baud-nya nggak ngaruh.",
+      "judul": ["USB native?", "Baud tak ngaruh"], "warna_judul": "cyan",
+      "kata_kunci": "Leonardo",
+      "komponen": "kartu_solusi",
+      "data": { "teks": "Port USB native (Leonardo): angka baud tidak berpengaruh" }
+    },
+    {
+      "no": 7, "mulai": 32, "selesai": 37,
+      "voiceover": "Samakan angkanya, teks langsung terbaca. Board-mu pakai baud berapa? Tulis di komentar.",
+      "judul": ["Samakan angkanya,", "langsung terbaca"], "warna_judul": "hijau",
+      "hantaman": "TERBACA.",
+      "kata_kunci": "komentar",
+      "komponen": "cta",
+      "data": { "teks": "Board-mu pakai baud berapa?" }
+    }
+  ],
+  "publikasi": {
+    "judul": "Serial Monitor keluar huruf aneh? Cek baud rate",
+    "opsi_judul": ["Serial Monitor keluar huruf aneh? Cek baud rate"],
+    "deskripsi": "Huruf aneh di Serial Monitor biasanya karena baud rate monitor beda dengan Serial.begin.",
+    "hashtag_youtube": ["#shorts", "#arduino", "#esp32", "#1Hertz"],
+    "tags_youtube": ["serial monitor huruf aneh", "baud rate arduino"],
+    "caption_tiktok": "Serial Monitor-mu keluar huruf aneh?",
+    "hashtag_tiktok": ["#arduino", "#esp32"],
+    "teks_cover": "Huruf aneh?",
+    "pinned_comment": "Board-mu pakai baud berapa?"
+  },
+  "qa": { "perlu_dicek": [], "risiko": [] },
+  "sumber": [
+    { "judul": "Arduino Docs: Serial.begin()", "url": "https://docs.arduino.cc/language-reference/en/functions/communication/serial/begin/" },
+    { "judul": "Espressif esptool: Boot Mode Selection (ESP8266)", "url": "https://docs.espressif.com/projects/esptool/en/latest/esp8266/advanced-topics/boot-mode-selection.html" }
+  ]
+}

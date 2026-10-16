@@ -34,6 +34,7 @@ function rapikan(k) {
   const adegan = Array.isArray(k.adegan) ? k.adegan.filter((a) => a && a.voiceover) : [];
   // waktu adegan: nyambung mulai 0; durasi kira-kira dari jumlah kata (±2,4 kata/detik, min 3 dtk)
   let t = 0;
+  let nHantaman = 0;
   adegan.forEach((a, i) => {
     const kata = String(a.voiceover).split(/\s+/).filter(Boolean).length;
     let d = Number(a.selesai) - Number(a.mulai);
@@ -42,6 +43,16 @@ function rapikan(k) {
     if (!a.komponen) a.komponen = 'kartu_solusi';
     a.data = a.data || {};
     if (a.kata_kunci && !String(a.voiceover).toLowerCase().includes(String(a.kata_kunci).toLowerCase())) delete a.kata_kunci;
+    // field visual baru: rapikan, jangan sampai menggagalkan validasi
+    if (a.judul !== undefined) {
+      const j = Array.isArray(a.judul) ? a.judul : String(a.judul).split('|');
+      if (j.length >= 2) a.judul = [String(j[0]).trim().slice(0, 26), String(j[1]).trim().slice(0, 26)];
+      else delete a.judul;
+    }
+    if (a.hantaman !== undefined) {
+      const h = String(a.hantaman || '').trim().split(/\s+/)[0] || '';
+      if (h && h.length <= 10 && nHantaman < 3 && i > 0) { a.hantaman = h; nHantaman++; } else delete a.hantaman;
+    }
   });
   k.adegan = adegan;
   const vo = adegan.map((a) => String(a.voiceover).trim()).join(' ');

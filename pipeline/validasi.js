@@ -1,5 +1,5 @@
 // Cek field wajib JSON konten 1Hertz (sama dengan node "Cek field wajib" di n8n).
-const KOMPONEN_OK = ['kartu_status', 'kartu_kode', 'x_vs_y', 'kartu_masalah', 'kartu_solusi', 'diagram', 'bukti_asli', 'ilustrasi', 'cta', 'log_serial'];
+const KOMPONEN_OK = ['kartu_status', 'kartu_kode', 'x_vs_y', 'kartu_masalah', 'kartu_solusi', 'diagram', 'bukti_asli', 'ilustrasi', 'cta', 'log_serial', 'sinyal', 'garis_waktu', 'lembar'];
 
 function cek(d) {
   const err = [];
@@ -18,7 +18,13 @@ function cek(d) {
   a.forEach((s, i) => {
     if (!KOMPONEN_OK.includes(s.komponen)) err.push(`adegan ${i + 1}: komponen "${s.komponen}" tidak dikenal`);
     if (i > 0 && Math.abs(s.mulai - a[i - 1].selesai) > 0.01) err.push(`adegan ${i + 1}: waktu tidak nyambung`);
+    if (s.judul !== undefined && !(Array.isArray(s.judul) && s.judul.length === 2 && s.judul.every((x) => typeof x === 'string' && x.length <= 26)))
+      err.push(`adegan ${i + 1}: judul harus ["baris 1","baris 2"], tiap baris maks 26 karakter`);
+    if (s.hantaman !== undefined && !(typeof s.hantaman === 'string' && s.hantaman.trim().length > 0 && s.hantaman.trim().length <= 10))
+      err.push(`adegan ${i + 1}: hantaman harus 1 kata, maks 10 karakter`);
   });
+  const nHantaman = a.filter((s) => s.hantaman).length;
+  req(nHantaman <= 3, `hantaman ${nHantaman} kali (maks 3 per video)`);
   const p = d.publikasi || {};
   req(typeof p.judul === 'string' && p.judul.length > 0 && p.judul.length <= 100, 'publikasi.judul kosong atau > 100 karakter');
   req(typeof p.deskripsi === 'string', 'publikasi.deskripsi tidak ada');
