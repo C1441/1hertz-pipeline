@@ -1,0 +1,40 @@
+name: Komentar otomatis 1Hertz
+
+on:
+  schedule:
+    # tiap jam di menit 17 (GitHub bisa terlambat saat ramai)
+    - cron: '17 * * * *'
+  workflow_dispatch: {}   # tombol "Run workflow" manual
+
+concurrency:
+  group: komentar-1hertz
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # untuk mencatat log/komentar.txt
+
+jobs:
+  komentar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Posting komentar di video yang sudah publik
+        run: node pipeline/komentar.js kirim
+      - name: Simpan catatan komentar
+        if: always()
+        run: |
+          if [ -n "$(git status --porcelain log)" ]; then
+            git config user.name "1hertz-bot"
+            git config user.email "1hertz-bot@users.noreply.github.com"
+            git add log
+            git commit -m "log: komentar $(date -u +%Y-%m-%dT%H:%MZ)"
+            for i in 1 2 3; do git pull --rebase -q && git push -q && break; sleep 5; done
+          fi
