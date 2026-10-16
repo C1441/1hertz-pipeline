@@ -367,12 +367,12 @@ const Samakan: React.FC<{ t: number }> = ({ t }) => {
         sorotBaud={sudah ? 'cyan' : t > 15.0 ? 'err' : null}
         daftar={buka ? { buka: true, sorot: t > 16.7 ? 3 : 0 } : null}
       />
-      {/* garis "sama dengan" */}
+      {/* garis "sama dengan": lewat luar kartu kode, tidak menimpa teks */}
       <g opacity={sama}>
-        <path d={`M${angkaX + 58},140 C${angkaX + 58},300 860,300 860,428`} fill="none" stroke={K.cyan} strokeWidth={4} strokeDasharray="10 10" />
-        <g transform={`translate(${(angkaX + 58 + 860) / 2 + 30},290) scale(${pop(t, 17.6)})`}>
-          <circle r={38} fill={K.cyan} />
-          <text y={22} textAnchor="middle" fontFamily={SANS} fontWeight={900} fontSize={60} fill={K.bg}>=</text>
+        <path d={`M${angkaX + 3 * cw},92 V46 H1012 V375 H845 V430`} fill="none" stroke={K.cyan} strokeWidth={4} strokeDasharray="10 10" strokeLinejoin="round" />
+        <g transform={`translate(845,375) scale(${pop(t, 17.6)})`}>
+          <circle r={36} fill={K.cyan} />
+          <text y={21} textAnchor="middle" fontFamily={SANS} fontWeight={900} fontSize={58} fill={K.bg}>=</text>
         </g>
       </g>
       <Kursor t={t} x={kx} y={ky} klik={t < 17 ? 16.0 : 17.2} kelihatan={interpolate(t, [14.7, 14.9, 18.4, 18.7], [0, 1, 1, 0], C)} />
