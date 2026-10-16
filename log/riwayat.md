@@ -9,3 +9,4 @@
 | 2026-10-15 16:23 | tema - ESP32 tidak terdeteksi di port COM (2) | gagal | - | fetch failed |
 | 2026-10-15 16:30 | tema - ESP32 tidak terdeteksi di port COM (3) | gagal | - | Gemini gagal membuat konten: gemini-3.8-flash+search: 429 { "error": { "code": 429, "message": "You exceeded your curren |
 | 2026-10-15 16:32 | tema - ESP32 tidak terdeteksi di port COM (4) | privat ✅ | x5j2g-Ccdkc | produksi 2.3 menit |
+| 2026-10-16 00:15 | 2026-10-16-esp32-s3-super-mini-bootloop.json | privat ✅ | I-_Z36BTALI | produksi 2.9 menit · ON AIR ✅ |
