@@ -191,7 +191,7 @@ export const UjiBaud: React.FC = () => {
 };
 
 /* ---------------- 0–3: monitor penuh karakter acak ---------------- */
-const Pembuka: React.FC<{ t: number }> = ({ t }) => {
+export const Pembuka: React.FC<{ t: number }> = ({ t }) => {
   const getar = t > 1.4 && t < 1.6 ? Math.sin(t * 160) * 8 : 0;
   return (
     <Svg>
@@ -204,7 +204,7 @@ const Pembuka: React.FC<{ t: number }> = ({ t }) => {
 };
 
 /* ---------------- 3.9–7: kode benar ≠ monitor ---------------- */
-const Banding: React.FC<{ t: number }> = ({ t }) => {
+export const Banding: React.FC<{ t: number }> = ({ t }) => {
   const kartu = (y: number, a: number, isi: React.ReactNode, warna: string) => {
     const k = naik(t, a, 0.35);
     return (
@@ -221,7 +221,7 @@ const Banding: React.FC<{ t: number }> = ({ t }) => {
     <Svg>
       {kartu(
         110,
-        4.0,
+        3.5,
         <>
           <text x={130} y={170} fontFamily={MONO} fontSize={24} letterSpacing={4} fill={K.dim}>BOARD KIRIM</text>
           <text x={130} y={258} fontFamily={MONO} fontWeight={700} fontSize={52} fill={K.text}>
@@ -265,8 +265,8 @@ const gelombang = (yTinggi: number, yRendah: number) => {
   });
   return d;
 };
-const Gelombang: React.FC<{ t: number }> = ({ t }) => {
-  const lebar = interpolate(t, [7.3, 8.7], [0, 980], { ...C, easing: Easing.inOut(Easing.cubic) });
+export const Gelombang: React.FC<{ t: number }> = ({ t }) => {
+  const lebar = interpolate(t, [7.25, 8.7], [0, 980], { ...C, easing: Easing.inOut(Easing.cubic) });
   const lebarB = interpolate(t, [10.5, 11.0], [0, 980], C);
   const dataIdx = [2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 14, 15, 16, 17, 18, 19];
   const sampelB = [7, 19];
@@ -288,6 +288,18 @@ const Gelombang: React.FC<{ t: number }> = ({ t }) => {
         <rect x={bx(1)} y={150} width={BW * 10} height={24} rx={6} fill={K.cyan} opacity={0.1} />
         <rect x={bx(11)} y={150} width={BW * 10} height={24} rx={6} fill={K.cyan} opacity={0.1} />
       </g>
+      {lebar > 2 && lebar < 958 && (
+        <g>
+          <circle cx={X0 + lebar} cy={BIT[Math.min(BIT.length - 1, Math.floor(lebar / BW))] ? 190 : 280} r={26} fill={K.cyan} opacity={0.45} filter="url(#pendar)" />
+          <circle cx={X0 + lebar} cy={BIT[Math.min(BIT.length - 1, Math.floor(lebar / BW))] ? 190 : 280} r={10} fill="#fff" />
+        </g>
+      )}
+      {lebarB > 2 && lebarB < 958 && (
+        <g>
+          <circle cx={X0 + lebarB} cy={BIT[Math.min(BIT.length - 1, Math.floor(lebarB / BW))] ? 590 : 680} r={22} fill={K.cyan} opacity={0.35} filter="url(#pendar)" />
+          <circle cx={X0 + lebarB} cy={BIT[Math.min(BIT.length - 1, Math.floor(lebarB / BW))] ? 590 : 680} r={8} fill="#fff" />
+        </g>
+      )}
       {dataIdx.map((i, k) => (
         <circle key={i} cx={bx(i) + BW / 2} cy={BIT[i] ? 190 : 280} r={8} fill={K.ok} opacity={naik(t, 8.8 + k * 0.06, 0.15)} />
       ))}
@@ -329,7 +341,7 @@ const Gelombang: React.FC<{ t: number }> = ({ t }) => {
 
 /* ---------------- 14–20: samakan angka (kode ↔ dropdown) ---------------- */
 const KODE = ['void setup() {', '  Serial.begin(115200);', '}', 'void loop() {', '  Serial.println("Halo dari ESP32!");', '}'];
-const Samakan: React.FC<{ t: number }> = ({ t }) => {
+export const Samakan: React.FC<{ t: number }> = ({ t }) => {
   const cw = 19.3;
   const angkaX = 150 + 15 * cw;
   // jalur kursor
@@ -382,7 +394,7 @@ const Samakan: React.FC<{ t: number }> = ({ t }) => {
 
 /* ---------------- 20–28: lembar datasheet ---------------- */
 const INK = '#0C1117';
-const Datasheet: React.FC<{ t: number }> = ({ t }) => {
+export const Datasheet: React.FC<{ t: number }> = ({ t }) => {
   const baris = [
     { a: 21.0, nama: 'Arduino Uno', ket: 'Serial.begin di contoh resmi', nilai: 9600, warna: '#0E8F99' },
     { a: 23.2, nama: 'ESP32', ket: 'log boot ROM', nilai: 115200, warna: '#0E8F99' },
@@ -426,7 +438,7 @@ const Datasheet: React.FC<{ t: number }> = ({ t }) => {
 };
 
 /* ---------------- 28–32: USB native, baud tak ngaruh ---------------- */
-const UsbNative: React.FC<{ t: number }> = ({ t }) => {
+export const UsbNative: React.FC<{ t: number }> = ({ t }) => {
   const nilai = t < 28.8 ? '9600 baud' : t < 29.6 ? '57600 baud' : t < 30.4 ? '115200 baud' : '230400 baud';
   const klik = t < 29.6 ? 28.8 : t < 30.4 ? 29.6 : 30.4;
   return (
@@ -446,7 +458,7 @@ const UsbNative: React.FC<{ t: number }> = ({ t }) => {
 };
 
 /* ---------------- 32.9–36.4: penutup (callback pembuka, versi beres) ---------------- */
-const Penutup: React.FC<{ t: number }> = ({ t }) => (
+export const Penutup: React.FC<{ t: number }> = ({ t }) => (
   <Svg>
     <SerialMonitor t={t} x={40} y={40} w={1000} h={860} mulai={30.0} laju={7} tBersih={0} baud="115200 baud" sorotBaud="cyan" />
     <Ikon x={960} y={250} r={40} jenis="ok" s={pop(t, 33.2)} />
