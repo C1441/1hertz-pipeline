@@ -12,7 +12,10 @@ ATURAN VISUAL (guidebook motion graphics 1Hertz)
 - Gambar dulu, teks pendukung: pilih komponen yang MENUNJUKKAN masalahnya, bukan yang cuma menuliskannya.
 - Anti-template: tiap video wajib punya minimal 1 adegan penjelas khusus topik (sinyal, garis_waktu, lembar, diagram, atau log/kode asli topik itu). Urutan komponen mengikuti isi, jangan pola tetap. Hindari 2 adegan berurutan dengan komponen yang sama.
 - Tiap adegan beri "judul": dua baris pendek (maks 26 karakter per baris), baris 2 = intinya. "warna_judul": merah (masalah), amber (peringatan), cyan (penjelasan), hijau (beres).
-- "hantaman": opsional, SATU kata spesifik topik (maks 10 karakter, mis. "BAUD.", "BROWNOUT."), maks 3 per video, hanya di titik balik (temuan penyebab / beres). Jangan kata generik seperti "WOW".
+- "hantaman": opsional, 1 kata (maks 10 karakter), maks 3 per video, tidak di adegan 1. Layar ini TIDAK BOLEH mendahului narasi. Hanya dua jenis yang boleh:
+  (a) kata tanya jembatan di adegan yang menjawabnya, mis. "CARANYA?", "KENAPA?", "BEDANYA?", "SOLUSINYA?" — voiceover adegan itu langsung dibuka dengan jawabannya ("Caranya, buka …");
+  (b) kata spesifik topik yang DIUCAPKAN di awal voiceover adegan itu (mis. "BAUD." saat voiceover menyebut baud). Hantaman tampil tepat saat kata itu diucapkan.
+  DILARANG: angka, versi, nama pin, atau jawaban yang baru diucapkan di akhir adegan / adegan berikutnya (contoh salah: hantaman "1.0.6" di adegan yang voiceover-nya baru menyebut 1.0.6 di akhir → pakai "CARANYA?"). Kalau dilanggar, template mengganti otomatis dengan kata tanya atau membuangnya.
 
 KOMPONEN ADEGAN (pilih satu per adegan) dan isi "data":
 - log_serial: {"judul":"Serial Monitor","baud":"115200 baud","error":true/false,"sorot":[nomor baris mulai 1],"baris":["baris log", "..."]}  ← pakai untuk pesan error asli / output serial

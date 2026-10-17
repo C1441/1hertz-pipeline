@@ -3,6 +3,7 @@ import React from 'react';
 import { AbsoluteFill, interpolate, Easing } from 'remotion';
 import { K, SANS, MONO } from './pustaka';
 import { C } from './gb';
+import { ukuranPas } from './ukur';
 
 const easeOut = Easing.bezier(0.16, 1, 0.3, 1);
 const easeIn = Easing.bezier(0.7, 0, 0.84, 0);
@@ -221,7 +222,8 @@ export const Hantaman2: React.FC<{
   const pout = interpolate(t, [b - dKeluar, b], [0, 1], { ...C, easing: easeIn });
   const s = interpolate(pin, [0, 1], [2.6, 1]);
   const kilat = interpolate(t, [a - 0.06, a, a + 0.12], [0, 0.85, 0], C);
-  const besar = kata.length > 6 ? 168 : 260;
+  // kata hantaman selalu muat di layar (maks 940 px)
+  const besar = ukuranPas(kata, kata.length > 6 ? 168 : 260, 940, SANS, 900, -6, 90);
   // keluar
   let tf = '';
   let clip: string | undefined;
@@ -237,7 +239,7 @@ export const Hantaman2: React.FC<{
   return (
     <>
       {t >= a && (
-        <AbsoluteFill style={{ clipPath: clip }}>
+        <AbsoluteFill style={{ clipPath: clip }} data-qa-penutup>
           <svg width={0} height={0} style={{ position: 'absolute' }}>
             <filter id={id} x="-30%" y="-30%" width="160%" height="160%">
               <feGaussianBlur stdDeviation={`${Math.max(0, blurX + (1 - pin) * 18)} ${(1 - pin) * 6}`} />
@@ -251,6 +253,7 @@ export const Hantaman2: React.FC<{
               return (
                 <div
                   key={r}
+                  data-qa="hias"
                   style={{
                     position: 'absolute',
                     top: 120 + r * 200,
@@ -292,7 +295,7 @@ export const Hantaman2: React.FC<{
             </svg>
             <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
               {[0.3, 0.16].map((o, i) => (
-                <div key={i} style={{ position: 'absolute', fontFamily: SANS, fontWeight: 900, fontSize: besar, letterSpacing: -6, color: K.bg, opacity: o * (1 - pin), transform: `scale(${s * (1.12 + i * 0.12)})` }}>
+                <div key={i} data-qa="hias" style={{ position: 'absolute', fontFamily: SANS, fontWeight: 900, fontSize: besar, letterSpacing: -6, color: K.bg, opacity: o * (1 - pin), transform: `scale(${s * (1.12 + i * 0.12)})` }}>
                   {kata}
                 </div>
               ))}

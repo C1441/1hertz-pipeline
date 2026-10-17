@@ -191,6 +191,16 @@ function pilihMusik() {
   fs.mkdirSync(path.dirname(fileProps), { recursive: true });
   fs.writeFileSync(fileProps, JSON.stringify(props));
 
+  // QA visual sebelum render penuh: teks tumpang tindih / terpotong / tertutup tombol YouTube → stop di sini
+  if (process.env.QA_VISUAL !== '0') {
+    log('QA visual…');
+    const qa = spawnSync(process.execPath, [path.join(__dirname, 'qa-visual.js'), fileProps, path.join(HASIL, 'qa')], { cwd: REMOTION, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+    const ringkas = (((qa.stdout || '').match(/QA=(.*)/) || [])[1] || '').trim();
+    for (const b of (qa.stderr || '').split('\n')) if (/^\[qa\] (MASALAH|catatan|lolos)/.test(b)) log(b.replace('[qa] ', 'QA: '));
+    if (qa.status === 1) gagal(`QA visual: ${ringkas}`);
+    if (qa.status !== 0) log(`peringatan: QA visual tidak jalan (${ringkas || 'kode ' + qa.status}), lanjut render`);
+  }
+
   const keluar = path.join(HASIL, `${id}.mp4`);
   log('render…');
   const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';

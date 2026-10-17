@@ -56,7 +56,7 @@ jobs:
           [ -d node_modules ] || npm ci --no-audit --no-fund
           npx remotion browser ensure
 
-      - name: Produksi (TTS → render → upload YouTube privat)
+      - name: Produksi (TTS → QA visual → render → upload YouTube privat)
         if: steps.cek.outputs.ada == 'true'
         run: node pipeline/gh-runner.js proses
 
@@ -65,7 +65,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: video-1hertz-${{ github.run_number }}
-          path: hasil/*.mp4
+          path: |
+            hasil/*.mp4
+            hasil/qa/*.jpg
           retention-days: 3
           if-no-files-found: ignore
 

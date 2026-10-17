@@ -10,6 +10,8 @@ import { K, SANS, Warna } from './gaya/pustaka';
 import { C, Kerangka3, Grain, Bab } from './gaya/gb';
 import { Adegan4, Hantaman2, TitikCahaya, Masuk, Keluar } from './gaya/transisi';
 import { KOMPONEN_V2, sfxKomponen, Bukti, bungkus } from './gaya/Adegan';
+import { PemeriksaQA } from './gaya/qa';
+import { resetPotong, ukuranPas } from './gaya/ukur';
 
 type AdeganJson = {
   no: number;
@@ -25,13 +27,28 @@ type AdeganJson = {
   hantaman?: string;
 };
 export type Kata = { teks: string; mulai: number; selesai: number; adegan: number; akhirFrasa?: boolean };
-type Props = { konten: any; audio?: string; kata?: Kata[]; amplitudo?: number[]; musik?: string; sfx?: boolean };
+type Props = { konten: any; audio?: string; kata?: Kata[]; amplitudo?: number[]; musik?: string; sfx?: boolean; qa?: boolean };
 
 /* ---------------- rencana transisi (dirotasi per video) ---------------- */
 type Pasangan = 'sapuan' | 'runtuh' | 'zoomTembus' | 'balik' | 'terdorong' | 'glitch';
 const PUTARAN: Pasangan[] = ['sapuan', 'runtuh', 'zoomTembus', 'balik'];
 const MASUK: Record<Pasangan, Masuk> = { sapuan: 'sapuan', runtuh: 'titik', zoomTembus: 'zoomMasuk', balik: 'balik', terdorong: 'tampar', glitch: 'langsung' };
 const TERANG = ['x_vs_y', 'lembar'];
+// kata tanya jembatan pengganti hantaman yang mendahului narasi: diambil dari kata pembuka voiceover adegan itu,
+// jadi selalu nyambung dengan yang diucapkan ("Caranya, buka …" → "CARANYA?")
+const PEMBUKA: [RegExp, string][] = [
+  [/^(caranya|gimana|bagaimana)$/, 'CARANYA?'],
+  [/^(solusinya|fixnya|perbaikannya)$/, 'SOLUSINYA?'],
+  [/^(karena|penyebabnya|sebabnya|kenapa|soalnya|gara)$/, 'KENAPA?'],
+  [/^(bedanya|perbedaannya)$/, 'BEDANYA?'],
+  [/^(hasilnya)$/, 'HASILNYA?'],
+  [/^(harusnya|seharusnya)$/, 'HARUSNYA?'],
+];
+const jembatanDari = (voiceover: string): string | undefined => {
+  const kata = String(voiceover || '').split(/\s+/).slice(0, 2).map((k) => k.toLowerCase().replace(/[^a-z]/g, ''));
+  for (const k of kata) for (const [re, j] of PEMBUKA) if (re.test(k)) return j;
+  return undefined;
+};
 const hashTeks = (s: string) => {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
@@ -117,8 +134,9 @@ const SubtitleKata: React.FC<{ t: number; kata: Kata[]; adegan: AdeganJson[] }> 
   const op = interpolate(t, [f[0].mulai - 0.05, f[0].mulai + 0.08], [0.4, 1], C);
   const kunci = bersih(adegan[f[0].adegan]?.kata_kunci ?? '');
   return (
-    <div style={{ position: 'absolute', top: 1440, left: 0, width: 1080, height: 480, background: K.band, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-      <div style={{ position: 'absolute', top: 44, left: 80, right: 80, textAlign: 'center', fontFamily: SANS, fontSize: 56, fontWeight: 800, lineHeight: 1.25, letterSpacing: -0.5, opacity: op }}>
+    // tanpa pita hitam: latar titik-titik tetap menyambung sampai bawah; lebar dibatasi supaya tidak masuk kolom tombol YouTube
+    <div style={{ position: 'absolute', top: 1460, left: 140, right: 140 }}>
+      <div style={{ textAlign: 'center', fontFamily: SANS, fontSize: 56, fontWeight: 800, lineHeight: 1.25, letterSpacing: -0.5, opacity: op, textShadow: '0 3px 14px rgba(0,0,0,0.85)' }}>
         {f.map((k, i) => (
           <span key={i} style={{ color: kunci && bersih(k.teks).includes(kunci) ? K.amber : K.text, opacity: k.mulai <= t ? 1 : 0.38 }}>
             {k.teks.replace(/[.,:;!]+$/, '')}
@@ -146,9 +164,10 @@ const kataCadangan = (adegan: AdeganJson[]): Kata[] => {
 };
 
 /* ================================================================== */
-export const Short1Hertz: React.FC<Props> = ({ konten, audio, kata, amplitudo, musik, sfx = true }) => {
+export const Short1Hertz: React.FC<Props> = ({ konten, audio, kata, amplitudo, musik, sfx = true, qa = false }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
+  resetPotong(); // catatan teks terpotong dihitung ulang tiap frame (dibaca QA visual)
   const t = frame / fps;
   const adegan: AdeganJson[] = konten?.adegan ?? [];
   const id = String(konten?.id ?? 'video');
@@ -157,19 +176,39 @@ export const Short1Hertz: React.FC<Props> = ({ konten, audio, kata, amplitudo, m
   const amp = amplitudo ?? [];
   const cover = konten?.publikasi?.teks_cover;
 
-  // hantaman: maks 3, tampil 0,85 dtk di awal adegannya
-  const hantaman = useMemo(
-    () =>
-      adegan
-        .map((a, i) => ({ i, kata: String(a.hantaman || '').trim().toUpperCase().slice(0, 12), a: a.mulai }))
-        .filter((h) => h.kata && h.i > 0)
-        .slice(0, 3),
-    [adegan],
-  );
+  // hantaman: maks 3, tampil 0,85 dtk. Aturan (supaya tidak membocorkan jawaban sebelum diucapkan):
+  //  - kata tanya jembatan ("CARANYA?", "KENAPA?") → tampil di awal adegan, adegan itu yang menjawab
+  //  - kata yang DIUCAPKAN di 40% awal adegan → tampil tepat saat kata itu diucapkan
+  //  - selain itu (mis. angka/versi yang baru disebut belakangan) → diganti kata tanya dari kata pembuka
+  //    voiceover adegan itu ("Caranya, …" → "CARANYA?"), atau dibuang kalau tidak ada
+  const { hantaman, catatan } = useMemo(() => {
+    const out: { i: number; kata: string; a: number }[] = [];
+    const cat: string[] = [];
+    adegan.forEach((a, i) => {
+      const asli = String(a.hantaman || '').trim().toUpperCase().slice(0, 12);
+      if (!asli || i === 0 || out.length >= 3) return;
+      if (asli.endsWith('?')) {
+        out.push({ i, kata: asli, a: a.mulai });
+        return;
+      }
+      const kunci = bersih(asli);
+      // kata yang diucapkan di 40% awal adegan → tampil tepat saat diucapkan (tidak mendahului suara)
+      const batas = a.mulai + Math.max(1.2, (a.selesai - a.mulai) * 0.4);
+      const cocok = kunci.length >= 2 ? daftarKata.find((k) => k.adegan === i && bersih(k.teks).includes(kunci)) : undefined;
+      if (cocok && cocok.mulai <= batas) {
+        out.push({ i, kata: asli, a: Math.max(a.mulai, cocok.mulai - 0.08) });
+        return;
+      }
+      const ganti = jembatanDari(a.voiceover);
+      cat.push(`hantaman "${asli}" di adegan ${i + 1} belum diucapkan saat tampil → ${ganti ? `diganti "${ganti}"` : 'dibuang'}`);
+      if (ganti) out.push({ i, kata: ganti, a: a.mulai });
+    });
+    return { hantaman: out, catatan: cat };
+  }, [adegan, daftarKata]);
 
   const bab: Bab[] = adegan.map((a, i) => {
     const [l1, l2] = judulAdegan(a, i === 0 ? cover : undefined);
-    const tutup = hantaman.find((h) => h.i === i);
+    const tutup = hantaman.find((h) => h.i === i && h.a <= a.mulai + 0.05);
     return {
       a: tutup ? a.mulai + 0.55 : a.mulai,
       b: i < adegan.length - 1 ? a.selesai : a.selesai + 1,
@@ -202,7 +241,8 @@ export const Short1Hertz: React.FC<Props> = ({ konten, audio, kata, amplitudo, m
         else if (p === 'terdorong') out.push({ t: a.mulai - 0.3, f: 'whoosh', v: 0.35 });
         else out.push({ t: a.mulai - 0.25, f: 'whoosh', v: 0.35 });
       }
-      if (hantaman.find((h) => h.i === i)) out.push({ t: a.mulai, f: 'impact', v: 0.5 });
+      const h = hantaman.find((x) => x.i === i);
+      if (h) out.push({ t: h.a, f: 'impact', v: 0.5 });
       if (i === adegan.length - 1 && i > 0) out.push({ t: Math.max(0, a.mulai - 0.9), f: 'riser', v: 0.22 });
       for (const s of sfxKomponen(a.komponen, a.data ?? {}, d)) out.push({ t: a.mulai + s.t, f: s.f, v: s.v });
     });
@@ -210,7 +250,7 @@ export const Short1Hertz: React.FC<Props> = ({ konten, audio, kata, amplitudo, m
   }, [adegan, jadwal, hantaman, sfx, fps, durationInFrames]);
 
   return (
-    <AbsoluteFill style={{ backgroundColor: K.bg }}>
+    <AbsoluteFill style={{ backgroundColor: K.bg }} data-qa-akar>
       {audio ? <Audio src={staticFile(audio)} /> : null}
       {musik ? (
         <Audio
@@ -261,6 +301,7 @@ export const Short1Hertz: React.FC<Props> = ({ konten, audio, kata, amplitudo, m
         <Hantaman2 key={h.i} t={t} a={h.a} b={h.a + 0.85} kata={h.kata} warna={h.i % 2 ? 'amber' : 'cyan'} keluar="sapuan" dKeluar={0.28} />
       ))}
       <Grain frame={frame} />
+      {qa && <PemeriksaQA frame={frame} info={{ debug: !!(konten as any)?.__debug, hantaman: hantaman.map((h) => ({ a: h.a, kata: h.kata })), catatan }} />}
     </AbsoluteFill>
   );
 };

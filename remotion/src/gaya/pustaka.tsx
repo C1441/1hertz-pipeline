@@ -140,8 +140,8 @@ export const Subtitle: React.FC<{ t: number; adegan: AdeganSub[] }> = ({ t, adeg
   const f = frasa[idx];
   const op = interpolate(t, [f.mulai, f.mulai + 0.1], [0.4, 1], C);
   return (
-    <div style={{ position: 'absolute', top: 1440, left: 0, width: 1080, height: 480, background: K.band, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-      <div style={{ position: 'absolute', top: 44, left: 80, right: 80, textAlign: 'center', fontSize: 56, fontWeight: 800, lineHeight: 1.25, letterSpacing: -0.5, opacity: op }}>
+    <div style={{ position: 'absolute', top: 1460, left: 140, right: 140, textAlign: 'center', fontSize: 56, fontWeight: 800, lineHeight: 1.25, letterSpacing: -0.5, opacity: op, textShadow: '0 3px 14px rgba(0,0,0,0.85)' }}>
+      <div>
         {f.kata.map((k, i) => (
           <span key={i} style={{ color: k.kunci ? K.amber : K.text, opacity: k.mulai <= t ? 1 : 0.38 }}>
             {k.teks.replace(/[.,:!]$/, '')}

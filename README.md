@@ -9,7 +9,8 @@ Tidak butuh laptop. Riwayat produksi tercatat di [`log/riwayat.md`](log/riwayat.
 |---|---|
 | `.github/workflows/produksi.yml` | Jadwal tiap 5 menit + tombol manual "Run workflow" |
 | `pipeline/gh-runner.js` | Cek antrian Drive, jalankan produksi, upload YouTube, pindahkan JSON |
-| `pipeline/produksi.js` | TTS Gemini → sinkron subtitle → render Remotion → normalisasi volume |
+| `pipeline/produksi.js` | TTS Gemini → sinkron subtitle → QA visual → render Remotion → normalisasi volume |
+| `pipeline/qa-visual.js` | Cek gambar tiap adegan: teks tumpang tindih / terpotong / tertutup tombol YouTube → stop sebelum render |
 | `pipeline/selaras.js` | Menyelaraskan subtitle & adegan dengan suara |
 | `pipeline/validasi.js` | Cek field wajib JSON |
 | `.github/workflows/komentar.yml` + `pipeline/komentar.js` | Tiap jam: posting `pinned_comment` di video ON AIR yang sudah publik (pin tetap manual) |
@@ -29,6 +30,7 @@ Rahasia tidak pernah ditulis ke repo atau dicetak di log.
 ## Kalau ada masalah
 - **Run merah + "invalid_grant"**: refresh token kedaluwarsa/dicabut → buat ulang lewat OAuth Playground, ganti secret `GOOGLE_REFRESH_TOKEN`.
 - **JSON masuk folder `gagal`**: alasannya ada di `log/riwayat.md`. Setelah diperbaiki, salin lagi ke `antrian`.
+- **Gagal "QA visual: …"**: ada teks yang kepanjangan / tumpang tindih / tertutup tombol YouTube. Pendekkan teks yang disebut di alasan, lalu salin lagi ke `antrian` (suara TTS dipakai ulang kalau naskah sama). Gambar yang diperiksa ikut tersimpan di artifact run (`hasil/qa`). Darurat: env `QA_VISUAL=0` melewati QA.
 - **Jadwal berhenti sendiri**: GitHub mematikan jadwal repo publik yang 60 hari tanpa aktivitas. Buka tab Actions → workflow → **Enable workflow**.
 - **Laptop (n8n) jangan dinyalakan bersamaan** dengan workflow ini, supaya satu JSON tidak diproses dua kali.
 

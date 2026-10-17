@@ -4,18 +4,20 @@
 import React from 'react';
 import { AbsoluteFill, Audio, Sequence, interpolate, Easing, staticFile, useVideoConfig } from 'remotion';
 import { K, SANS, MONO, naik, jendela, w, Warna, AdeganSub, Subtitle } from './pustaka';
+import { ukuranPas } from './ukur';
 
 export const C = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 
 /* ---------------- judul bab kinetik (kata per kata) ---------------- */
 export type Bab = { a: number; b: number; l1: string; l2: string; warna: Warna };
 
-const BarisKinetik: React.FC<{ t: number; a: number; teks: string; warna: string; tunda: number }> = ({ t, a, teks, warna, tunda }) => (
-  <div style={{ fontSize: 72, fontWeight: 800, color: warna, letterSpacing: -1.5, lineHeight: 1.08, whiteSpace: 'nowrap' }}>
+// judul bab selalu muat di lebar layar (maks 940 px): font mengecil otomatis kalau kalimatnya panjang
+const BarisKinetik: React.FC<{ t: number; a: number; teks: string; warna: string; tunda: number; ukuran?: number }> = ({ t, a, teks, warna, tunda, ukuran = 72 }) => (
+  <div style={{ fontSize: ukuran, fontWeight: 800, color: warna, letterSpacing: -1.5, lineHeight: 1.08, whiteSpace: 'nowrap' }}>
     {teks.split(' ').map((kata, i) => {
       const k = a === 0 && i === 0 && tunda === 0 ? 1 : naik(t, a + tunda + i * 0.09, 0.28);
       return (
-        <span key={i} style={{ display: 'inline-block', opacity: k, transform: `translateY(${(1 - k) * 18}px)`, marginRight: 18 }}>
+        <span key={i} style={{ display: 'inline-block', opacity: k, transform: `translateY(${(1 - k) * 18}px)`, marginRight: ukuran * 0.25 }}>
           {kata}
         </span>
       );
@@ -48,15 +50,17 @@ export const Kerangka3: React.FC<{ t: number; tag: string; bab: Bab[]; adegan: A
         const keluar = interpolate(t, [j.b - 0.2, j.b], [1, 0], C);
         if (t < j.a || t > j.b) return null;
         const n1 = j.l1.split(' ').length;
+        // satu ukuran untuk kedua baris supaya serasi
+        const ukuran = Math.min(ukuranPas(j.l1, 72, 920, SANS, 800, -1.5, 40), ukuranPas(j.l2, 72, 920, SANS, 800, -1.5, 40));
         return (
           <div key={i} style={{ position: 'absolute', top: 150, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: keluar }}>
-            <BarisKinetik t={t} a={j.a} teks={j.l1} warna={K.text} tunda={0} />
-            <BarisKinetik t={t} a={j.a} teks={j.l2} warna={w(j.warna)} tunda={n1 * 0.09 + 0.05} />
+            <BarisKinetik t={t} a={j.a} teks={j.l1} warna={K.text} tunda={0} ukuran={ukuran} />
+            <BarisKinetik t={t} a={j.a} teks={j.l2} warna={w(j.warna)} tunda={n1 * 0.09 + 0.05} ukuran={ukuran} />
           </div>
         );
       })}
       {/* HUD panggung */}
-      <svg width={1080} height={1920} style={{ position: 'absolute', inset: 0 }}>
+      <svg width={1080} height={1920} style={{ position: 'absolute', inset: 0 }} data-qa="hias">
         <g stroke="#4FE3EC" strokeOpacity={0.35} strokeWidth={2} fill="none">
           <path d="M28,380 v-30 h30 M1052,380 v-30 h-30 M28,1380 v30 h30 M1052,1380 v30 h-30" />
         </g>

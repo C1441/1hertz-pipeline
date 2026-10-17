@@ -5,6 +5,7 @@ import { interpolate, Easing } from 'remotion';
 import { K, SANS, MONO, naik, pop, Svg, Ikon, Pill } from './pustaka';
 import { C } from './gb';
 import { acak } from './transisi';
+import { ukuranPas, lebarTeks, potong, catatPotong, susunTeks, bungkusLebar } from './ukur';
 
 export type PropsAdegan = { lt: number; d: number; data: any; teks?: string };
 
@@ -30,6 +31,31 @@ export const bungkus = (teks: string, n: number, maksBaris = 99): string[] => {
   return out;
 };
 /** potong baris log yang terlalu panjang (karakter, bukan kata) */
+/** bungkus baris log per kata (huruf mono, maks n karakter); kata yang lebih panjang dari n dipecah per huruf */
+const bungkusMono = (s: string, n: number): string[] => {
+  const out: string[] = [];
+  let cur = '';
+  for (const k0 of String(s ?? '').split(/\s+/).filter(Boolean)) {
+    let k = k0;
+    while (k.length > n) {
+      if (cur) {
+        out.push(cur);
+        cur = '';
+      }
+      out.push(k.slice(0, n));
+      k = k.slice(n);
+    }
+    if (!k) continue;
+    if (!cur) cur = k;
+    else if (cur.length + 1 + k.length <= n) cur += ' ' + k;
+    else {
+      out.push(cur);
+      cur = k;
+    }
+  }
+  out.push(cur);
+  return out;
+};
 const pecahKarakter = (s: string, n: number) => {
   const out: string[] = [];
   let x = String(s ?? '');
@@ -80,13 +106,18 @@ const TeksKinetik: React.FC<{ lt: number; mulai: number; baris: string[]; ukuran
 /* log_serial — Serial Monitor / terminal                              */
 /* ================================================================== */
 export const LogSerial: React.FC<PropsAdegan> = ({ lt, d, data }) => {
-  const asli: string[] = (data?.baris ?? []).map(String).slice(0, 12);
+  const semua: string[] = (data?.baris ?? []).map(String);
+  if (semua.length > 12) catatPotong('log_serial: lebih dari 12 baris', semua.slice(12).join(' / '));
+  const asli = semua.slice(0, 12);
   const sorot: number[] = Array.isArray(data?.sorot) && data.sorot.length ? data.sorot : data?.error ? [asli.length] : [];
   const ukuran = 29;
-  const maksK = 52;
+  // ada ikon ✕ di kanan → baris dibungkus lebih pendek supaya tidak tertutup ikon
+  const adaIkon = sorot.length > 0;
+  const maksK = adaIkon ? 46 : 48;
   const rows: { teks: string; i: number }[] = [];
-  asli.forEach((b, i) => pecahKarakter(b, maksK).forEach((p) => rows.push({ teks: p, i })));
+  asli.forEach((b, i) => bungkusMono(b, maksK).forEach((p) => rows.push({ teks: p, i })));
   const lh = ukuran * 1.55;
+  if (rows.length > 15) catatPotong('log_serial: teks log terlalu panjang (maks 15 baris layar)', asli.join(' / '));
   const tampil = rows.slice(0, 15);
   const h = Math.min(960, Math.max(520, 170 + tampil.length * lh + 40));
   const y0 = Math.max(20, (1060 - h) / 2 - 10);
@@ -107,12 +138,12 @@ export const LogSerial: React.FC<PropsAdegan> = ({ lt, d, data }) => {
         <rect width={L} height={h} rx={18} fill="none" stroke="#2E3B48" strokeWidth={3} />
         <rect width={L} height={74} rx={18} fill="#151D26" />
         <rect y={56} width={L} height={18} fill="#151D26" />
-        <text x={30} y={48} fontFamily={SANS} fontWeight={600} fontSize={28} fill={K.text}>
-          {String(data?.judul || 'Serial Monitor').slice(0, 26)}
+        <text x={30} y={48} fontFamily={SANS} fontWeight={600} fontSize={ukuranPas(String(data?.judul || 'Serial Monitor'), 28, 640, SANS, 600, 0, 18)} fill={K.text}>
+          {potong(data?.judul || 'Serial Monitor', 40, 'log_serial judul')}
         </text>
         <rect x={bx} y={14} width={270} height={46} rx={8} fill="#0E141A" stroke={data?.error ? K.err : '#33404D'} strokeWidth={data?.error ? 3 : 2} />
-        <text x={bx + 18} y={46} fontFamily={SANS} fontWeight={600} fontSize={26} fill={data?.error ? K.err : K.text}>
-          {String(data?.baud || '115200 baud').slice(0, 16)}
+        <text x={bx + 18} y={46} fontFamily={SANS} fontWeight={600} fontSize={ukuranPas(String(data?.baud || '115200 baud'), 26, 200, SANS, 600, 0, 16)} fill={data?.error ? K.err : K.text}>
+          {potong(data?.baud || '115200 baud', 20, 'log_serial baud')}
         </text>
         <path d={`M${bx + 236},32 l8,8 l8,-8`} fill="none" stroke={K.dim} strokeWidth={3} strokeLinecap="round" />
         <rect x={20} y={88} width={L - 40} height={46} rx={8} fill="#0E141A" stroke="#26313C" strokeWidth={2} />
@@ -142,12 +173,15 @@ export const LogSerial: React.FC<PropsAdegan> = ({ lt, d, data }) => {
 /* kartu_kode — editor + diff                                          */
 /* ================================================================== */
 export const KartuKode: React.FC<PropsAdegan> = ({ lt, d, data }) => {
-  const baris: string[] = String(data?.kode ?? '').replace(/\t/g, '  ').split('\n').slice(0, 9);
+  const semuaBaris: string[] = String(data?.kode ?? '').replace(/\t/g, '  ').split('\n');
+  if (semuaBaris.length > 9) catatPotong('kartu_kode: lebih dari 9 baris kode', semuaBaris.slice(9).join(' / '));
+  if (semuaBaris.some((b) => b.length > 58)) catatPotong('kartu_kode: baris kode lebih dari 58 karakter', semuaBaris.find((b) => b.length > 58) ?? '');
+  const baris = semuaBaris.slice(0, 9);
   const sorot: number[] = data?.sorot_baris ?? [];
   const baru: number[] = data?.baris_baru ?? [];
   const hapus: number[] = data?.baris_hapus ?? [];
   const maksLen = Math.max(12, ...baris.map((b) => b.length + 4));
-  const ukuran = Math.max(22, Math.min(36, 900 / (maksLen * 0.61)));
+  const ukuran = Math.max(22, Math.min(36, 780 / (maksLen * 0.61)));
   const lh = ukuran * 1.6;
   const h = 110 + baris.length * lh + 30;
   const y0 = (1060 - h) / 2 - 10;
@@ -223,11 +257,11 @@ export const KartuStatus: React.FC<PropsAdegan> = ({ lt, d, data }) => {
   const ey = cy + R * Math.sin(sudut);
   const s = pop(lt, t0, 0.3);
   const status = urutan[i];
-  const besar = status.length > 9 ? 70 : 100;
+  const besar = ukuranPas(status, status.length > 9 ? 70 : 100, 760, MONO, 800, 0, 40);
   return (
     <Svg>
-      <text x={540} y={80} textAnchor="middle" fontFamily={MONO} fontSize={32} letterSpacing={8} fill={K.dim}>
-        {String(data?.label ?? 'STATUS').slice(0, 22).toUpperCase()}
+      <text x={540} y={80} textAnchor="middle" fontFamily={MONO} fontSize={ukuranPas(String(data?.label ?? 'STATUS').toUpperCase(), 32, 920, MONO, 400, 8, 18)} letterSpacing={8} fill={K.dim}>
+        {potong(String(data?.label ?? 'STATUS').toUpperCase(), 40, 'kartu_status label')}
       </text>
       <circle cx={cx} cy={cy} r={R} fill="none" stroke="#1C2731" strokeWidth={26} />
       {busur > 0 && busur < 1 && (
@@ -238,7 +272,7 @@ export const KartuStatus: React.FC<PropsAdegan> = ({ lt, d, data }) => {
       <Ikon x={cx} y={cy} r={90} jenis={ikonDariWarna(warna[i])} s={s} />
       <g transform={`translate(540,${cy + R + 170}) scale(${0.85 + 0.15 * s})`}>
         <text textAnchor="middle" fontFamily={MONO} fontWeight={800} fontSize={besar} fill={w}>
-          {status.slice(0, 14)}
+          {potong(status, 24, 'kartu_status status')}
         </text>
       </g>
       {urutan.map((u, k) => (
@@ -257,32 +291,52 @@ const INK = '#0C1117';
 export const XvsY: React.FC<PropsAdegan> = ({ lt, d, data }) => {
   const kiri = data?.kiri ?? {};
   const kanan = data?.kanan ?? {};
-  const pk: string[] = (kiri.poin ?? []).slice(0, 4);
-  const pn: string[] = (kanan.poin ?? []).slice(0, 4);
+  if ((kiri.poin ?? []).length > 4 || (kanan.poin ?? []).length > 4) catatPotong('x_vs_y: lebih dari 4 poin', '');
+  const pk: string[] = (kiri.poin ?? []).slice(0, 4).map(String);
+  const pn: string[] = (kanan.poin ?? []).slice(0, 4).map(String);
   const nBaris = Math.max(pk.length, pn.length);
   const step = Math.min(0.6, (d * 0.6) / Math.max(1, nBaris * 2));
-  const Kolom = ({ x, judul, poin, warna, mulai }: { x: number; judul: string; poin: string[]; warna: string; mulai: number }) => (
-    <g>
-      <text x={x} y={250} fontFamily={MONO} fontWeight={800} fontSize={44} fill={warna}>
-        {String(judul ?? '').slice(0, 16)}
-      </text>
-      <line x1={x} y1={272} x2={x + 400} y2={272} stroke={warna} strokeWidth={4} />
-      {poin.map((p, i) => {
-        const k = naik(lt, mulai + i * step * 2, 0.3);
-        const bar = bungkus(p, 20, 3);
-        return (
-          <g key={i} opacity={k} transform={`translate(${(1 - k) * -24},0)`}>
-            <circle cx={x + 10} cy={336 + i * 150} r={8} fill={warna} />
-            {bar.map((b, j) => (
-              <text key={j} x={x + 34} y={346 + i * 150 + j * 40} fontFamily={SANS} fontWeight={600} fontSize={33} fill={INK}>
-                {b}
-              </text>
-            ))}
-          </g>
-        );
-      })}
-    </g>
-  );
+  // Lebar teks tiap kolom 340 px (kolom kanan berakhir di x 944, di luar area tombol YouTube).
+  const LEBAR = 340;
+  const RUANG = 610; // tinggi yang tersedia untuk poin (y 320–930)
+  let u = 33;
+  let bk: string[][] = [];
+  let bn: string[][] = [];
+  let tinggi: number[] = [];
+  for (const coba of [33, 30, 27, 24]) {
+    u = coba;
+    bk = pk.map((p) => bungkusLebar(p, LEBAR, u, SANS, 600));
+    bn = pn.map((p) => bungkusLebar(p, LEBAR, u, SANS, 600));
+    tinggi = Array.from({ length: nBaris }, (_, i) => Math.max(bk[i]?.length ?? 0, bn[i]?.length ?? 0) * u * 1.22 + 44);
+    const lebarOk = [...bk, ...bn].every((bb) => bb.every((x) => lebarTeks(x, u, SANS, 600) <= LEBAR));
+    if (lebarOk && tinggi.reduce((x, y) => x + y, 0) <= RUANG) break;
+    if (coba === 24) catatPotong('x_vs_y: poin terlalu panjang', [...pk, ...pn].join(' / '));
+  }
+  const yBaris = tinggi.map((_, i) => 320 + tinggi.slice(0, i).reduce((x, y) => x + y, 0));
+  const Kolom = ({ x, judul, baris, warna, mulai }: { x: number; judul: string; baris: string[][]; warna: string; mulai: number }) => {
+    const j = potong(judul, 30, 'x_vs_y judul kolom');
+    return (
+      <g>
+        <text x={x} y={250} fontFamily={MONO} fontWeight={800} fontSize={ukuranPas(j, 44, 380, MONO, 800, 0, 24)} fill={warna}>
+          {j}
+        </text>
+        <line x1={x} y1={272} x2={x + 380} y2={272} stroke={warna} strokeWidth={4} />
+        {baris.map((bar, i) => {
+          const k = naik(lt, mulai + i * step * 2, 0.3);
+          return (
+            <g key={i} opacity={k} transform={`translate(${(1 - k) * -24},0)`}>
+              <circle cx={x + 10} cy={yBaris[i] + 16 - (33 - u) * 0.4} r={8} fill={warna} />
+              {bar.map((b, jj) => (
+                <text key={jj} x={x + 34} y={yBaris[i] + 26 + jj * u * 1.22} fontFamily={SANS} fontWeight={600} fontSize={u} fill={INK}>
+                  {b}
+                </text>
+              ))}
+            </g>
+          );
+        })}
+      </g>
+    );
+  };
   return (
     <Svg>
       <g filter="url(#bayang)">
@@ -296,8 +350,8 @@ export const XvsY: React.FC<PropsAdegan> = ({ lt, d, data }) => {
       <text x={90} y={104} fontFamily={SANS} fontWeight={900} fontSize={50} fill="#EEF1EC">LEMBAR</text>
       <text x={330} y={92} fontFamily={MONO} fontWeight={700} fontSize={24} letterSpacing={4} fill="#EEF1EC">BANDINGKAN</text>
       <line x1={540} y1={200} x2={540} y2={950} stroke="#C9D1C8" strokeWidth={2} />
-      <Kolom x={90} judul={kiri.judul} poin={pk} warna="#0E8F99" mulai={0.25} />
-      <Kolom x={590} judul={kanan.judul} poin={pn} warna="#C77700" mulai={0.25 + step} />
+      <Kolom x={90} judul={kiri.judul} baris={bk} warna="#0E8F99" mulai={0.25} />
+      <Kolom x={570} judul={kanan.judul} baris={bn} warna="#C77700" mulai={0.25 + step} />
       <g transform={`translate(540,212) scale(${pop(lt, 0.3)})`}>
         <circle r={36} fill={INK} />
         <text y={12} textAnchor="middle" fontFamily={SANS} fontWeight={900} fontSize={30} fill="#EEF1EC">VS</text>
@@ -310,6 +364,7 @@ export const XvsY: React.FC<PropsAdegan> = ({ lt, d, data }) => {
 /* diagram — alur bertahap dengan cahaya mengalir                       */
 /* ================================================================== */
 export const Diagram: React.FC<PropsAdegan> = ({ lt, d, data }) => {
+  if ((data?.elemen ?? []).length > 5) catatPotong('diagram: lebih dari 5 elemen', (data?.elemen ?? []).slice(5).join(' / '));
   const el: string[] = (data?.elemen ?? []).map(String).slice(0, 5);
   const n = Math.max(1, el.length);
   const hKotak = 130;
@@ -325,7 +380,7 @@ export const Diagram: React.FC<PropsAdegan> = ({ lt, d, data }) => {
         const aktif = lt >= tAktif(i);
         const k = naik(lt, tAktif(i), 0.3);
         const masuk = naik(lt, 0.05 + i * 0.06, 0.3);
-        const bar = bungkus(e, 30, 2);
+        const { baris: bar, ukuran: uk } = susunTeks(e, 650, [36, 31, 27], 2, SANS, 700, 'diagram elemen');
         const sekarang = aktif && (i === n - 1 || lt < tAktif(i + 1));
         return (
           <g key={i} opacity={0.35 + 0.65 * masuk}>
@@ -346,7 +401,7 @@ export const Diagram: React.FC<PropsAdegan> = ({ lt, d, data }) => {
               {String(i + 1).padStart(2, '0')}
             </text>
             {bar.map((b, j) => (
-              <text key={j} x={250} y={y + (bar.length === 1 ? 78 : 60 + j * 42)} fontFamily={SANS} fontWeight={700} fontSize={36} fill={aktif ? K.text : K.dim}>
+              <text key={j} x={250} y={y + (bar.length === 1 ? 65 + uk * 0.36 : 65 - uk * 0.6 + uk * 0.36 + j * uk * 1.2)} fontFamily={SANS} fontWeight={700} fontSize={uk} fill={aktif ? K.text : K.dim}>
                 {b}
               </text>
             ))}
@@ -386,14 +441,13 @@ const CincinIkon: React.FC<{ lt: number; jenis: 'ok' | 'err' }> = ({ lt, jenis }
 };
 const KartuTeks: React.FC<PropsAdegan & { jenis: 'ok' | 'err' }> = ({ lt, data, jenis, teks }) => {
   const isi = String(data?.teks ?? teks ?? '');
-  const baris = bungkus(isi, 20, 4);
-  const ukuran = baris.length > 3 ? 56 : 66;
+  const { baris, ukuran } = susunTeks(isi, 760, [66, 58, 50, 44], 5, SANS, 800, jenis === 'ok' ? 'kartu_solusi teks' : 'kartu_masalah teks');
   return (
     <>
       <Svg>
         <CincinIkon lt={lt} jenis={jenis} />
       </Svg>
-      <div style={{ position: 'absolute', top: 560, left: 60, right: 60 }}>
+      <div style={{ position: 'absolute', top: 560, left: 140, right: 140 }}>
         <TeksKinetik lt={lt} mulai={0.4} baris={baris} ukuran={ukuran} />
       </div>
     </>
@@ -407,7 +461,7 @@ export const KartuSolusi: React.FC<PropsAdegan> = (p) => <KartuTeks {...p} jenis
 /* ================================================================== */
 export const Bukti: React.FC<PropsAdegan> = ({ lt, data, teks }) => {
   const ket = String(data?.keterangan ?? data?.teks ?? teks ?? '');
-  const baris = bungkus(ket, 26, 3);
+  const { baris, ukuran: uk } = susunTeks(ket, 760, [44, 38, 33], 4, SANS, 700, 'bukti keterangan');
   const titik = Array.from({ length: 121 }, (_, i) => {
     const x = 90 + i * 7.5;
     const fase = (i / 120) * Math.PI * 6 - lt * 6;
@@ -430,7 +484,7 @@ export const Bukti: React.FC<PropsAdegan> = ({ lt, data, teks }) => {
       <text x={122} y={170} fontFamily={MONO} fontSize={26} letterSpacing={3} fill={K.err}>REC · BUKTI</text>
       <path d={titik} fill="none" stroke={K.cyan} strokeWidth={5} strokeLinejoin="round" filter="url(#pendar)" />
       {baris.map((b, i) => (
-        <text key={i} x={540} y={720 + i * 56} textAnchor="middle" fontFamily={SANS} fontWeight={700} fontSize={44} fill={K.text} opacity={naik(lt, 0.3 + i * 0.15)}>
+        <text key={i} x={540} y={720 + i * uk * 1.27} textAnchor="middle" fontFamily={SANS} fontWeight={700} fontSize={uk} fill={K.text} opacity={naik(lt, 0.3 + i * 0.15)}>
           {b}
         </text>
       ))}
@@ -443,7 +497,7 @@ export const Bukti: React.FC<PropsAdegan> = ({ lt, data, teks }) => {
 /* ================================================================== */
 export const Cta: React.FC<PropsAdegan> = ({ lt, data, teks }) => {
   const isi = String(data?.teks ?? teks ?? 'Tulis di komentar');
-  const baris = bungkus(isi, 22, 4);
+  const { baris, ukuran: uk } = susunTeks(isi, 800, [60, 52, 46, 40], 5, SANS, 800, 'cta teks');
   return (
     <>
       <Svg>
@@ -459,7 +513,7 @@ export const Cta: React.FC<PropsAdegan> = ({ lt, data, teks }) => {
         <Pill t={lt} a={Math.max(0.8, 0.4 + baris.join(' ').split(' ').length * 0.07)} x={540} y={880} teks="Tulis di komentar ↓" />
       </Svg>
       <div style={{ position: 'absolute', top: 290, left: 130, right: 130 }}>
-        <TeksKinetik lt={lt} mulai={0.25} baris={baris} ukuran={baris.length > 3 ? 52 : 60} />
+        <TeksKinetik lt={lt} mulai={0.25} baris={baris} ukuran={uk} />
       </div>
     </>
   );
@@ -521,7 +575,7 @@ export const Sinyal: React.FC<PropsAdegan> = ({ lt, d, data }) => {
         </clipPath>
       </defs>
       <text x={X0} y={yA[0] - 100} fontFamily={MONO} fontSize={24} letterSpacing={3} fill={K.dim}>
-        {String(data?.label ?? 'SINYAL TX').slice(0, 40).toUpperCase()}
+        {potong(String(data?.label ?? 'SINYAL TX').toUpperCase(), 40, 'sinyal label')}
       </text>
       <line x1={X0} y1={yA[1] + 20} x2={1020} y2={yA[1] + 20} stroke="#22303C" strokeWidth={2} />
       <g clipPath="url(#klipSinyalA)">
@@ -540,14 +594,18 @@ export const Sinyal: React.FC<PropsAdegan> = ({ lt, d, data }) => {
       })}
       {data?.catatan && (
         <text x={X0} y={yA[1] + 90} fontFamily={SANS} fontWeight={700} fontSize={32} fill={K.text} opacity={naik(lt, 0.4 + tGambar)}>
-          {bungkus(String(data.catatan), 44, 1)[0]}
+          {(() => {
+            const b = bungkus(String(data.catatan), 44, 99);
+            if (b.length > 1) catatPotong('sinyal catatan', String(data.catatan));
+            return bungkus(String(data.catatan), 44, 1)[0];
+          })()}
         </text>
       )}
       {salah && (
         <g>
           <g opacity={naik(lt, tB - 0.1)}>
             <text x={X0} y={500} fontFamily={MONO} fontSize={24} letterSpacing={3} fill={K.dim}>
-              {String(data?.label_salah ?? 'DIBACA SALAH').slice(0, 40).toUpperCase()}
+              {potong(String(data?.label_salah ?? 'DIBACA SALAH').toUpperCase(), 40, 'sinyal label_salah')}
             </text>
             <line x1={X0} y1={700} x2={1020} y2={700} stroke="#22303C" strokeWidth={2} />
           </g>
@@ -596,7 +654,7 @@ export const GarisWaktu: React.FC<PropsAdegan> = ({ lt, d, data }) => {
       {jalur.map((j, i) => (
         <g key={i}>
           <text x={GX0 - 60} y={yJ(i) - 70} fontFamily={MONO} fontWeight={700} fontSize={28} letterSpacing={4} fill={K.dim}>
-            {String(j?.nama ?? '').slice(0, 20).toUpperCase()}
+            {potong(String(j?.nama ?? '').toUpperCase(), 28, 'garis_waktu nama jalur')}
           </text>
           <line x1={GX0 - 60} y1={yJ(i) + 60} x2={GX1 + 40} y2={yJ(i) + 60} stroke="#22303C" strokeWidth={2} />
         </g>
@@ -622,11 +680,17 @@ export const GarisWaktu: React.FC<PropsAdegan> = ({ lt, d, data }) => {
             return (
               <g key={`${i}-${k}`}>
                 <rect x={x1} y={yJ(i) - 40} width={Math.max(6, x2 - x1 - 4)} height={90} rx={8} fill={w} fillOpacity={0.85} />
-                {b.label && x2 - x1 > 120 && (
-                  <text x={(x1 + x2) / 2} y={yJ(i) + 14} textAnchor="middle" fontFamily={MONO} fontWeight={700} fontSize={26} fill={K.bg}>
-                    {String(b.label).slice(0, Math.floor((x2 - x1) / 16))}
-                  </text>
-                )}
+                {b.label && x2 - x1 > 120 && (() => {
+                  // label blok mengecil supaya muat; kalau tetap tidak muat, dipotong + dicatat untuk QA
+                  const lbl = String(b.label);
+                  const uk = ukuranPas(lbl, 26, x2 - x1 - 24, MONO, 700, 0, 17);
+                  const muat = Math.max(1, Math.floor((x2 - x1 - 24) / (uk * 0.6)));
+                  return (
+                    <text x={(x1 + x2) / 2} y={yJ(i) + 14} textAnchor="middle" fontFamily={MONO} fontWeight={700} fontSize={uk} fill={K.bg}>
+                      {potong(lbl, muat, 'garis_waktu label blok')}
+                    </text>
+                  );
+                })()}
               </g>
             );
           }),
@@ -643,7 +707,7 @@ export const GarisWaktu: React.FC<PropsAdegan> = ({ lt, d, data }) => {
             <Ikon x={gx(v)} y={yJ(ji) + 5} r={30} jenis={jenis} s={interpolate(muncul, [0, 0.6, 1], [0.4, 1.15, 1])} />
             {m.label && (
               <text x={gx(v)} y={yJ(ji) + 80} textAnchor="middle" fontFamily={MONO} fontWeight={800} fontSize={24} fill={jenis === 'err' ? K.err : K.ok} opacity={muncul}>
-                {String(m.label).slice(0, 12)}
+                {potong(m.label, 16, 'garis_waktu label tanda')}
               </text>
             )}
           </g>
@@ -659,10 +723,23 @@ export const GarisWaktu: React.FC<PropsAdegan> = ({ lt, d, data }) => {
 /* lembar — tabel datasheet terang dengan angka menghitung               */
 /* ================================================================== */
 export const Lembar: React.FC<PropsAdegan> = ({ lt, d, data }) => {
+  if ((data?.baris ?? []).length > 4) catatPotong('lembar: lebih dari 4 baris', '');
   const baris: any[] = (data?.baris ?? []).slice(0, 4);
   const kolom: string[] = data?.kolom ?? ['ITEM', 'NILAI'];
   const step = Math.min(1.4, (d * 0.7) / Math.max(1, baris.length));
   const tinggiBaris = baris.length > 3 ? 175 : 220;
+  // Tepi teks: kiri 90, kanan 925 (kolom nilai tidak masuk area tombol YouTube di kanan bawah).
+  const KI = 90;
+  const KA = 925;
+  // Kepala lembar: kode di kiri, judul + sub rata kanan. Ukuran font diukur supaya tidak saling tabrak.
+  const kode = potong(data?.kode ?? 'LEMBAR', 16, 'lembar kode');
+  const fKode = ukuranPas(kode, 48, 400, SANS, 900);
+  const lKode = lebarTeks(kode, fKode, SANS, 900);
+  const sisa = 990 - (KI + lKode + 36);
+  const judul = potong(String(data?.judul ?? '').toUpperCase(), 34, 'lembar judul');
+  const sub = potong(String(data?.sub ?? '').toUpperCase(), 44, 'lembar sub');
+  const fJudul = ukuranPas(judul, 22, sisa, MONO, 700, 3, 13);
+  const fSub = ukuranPas(sub, 18, sisa, MONO, 400, 2, 12);
   return (
     <Svg>
       <g filter="url(#bayang)">
@@ -673,35 +750,44 @@ export const Lembar: React.FC<PropsAdegan> = ({ lt, d, data }) => {
       ))}
       <rect x={50} y={30} width={980} height={110} rx={16} fill={INK} />
       <rect x={50} y={110} width={980} height={30} fill={INK} />
-      <text x={90} y={104} fontFamily={SANS} fontWeight={900} fontSize={48} fill="#EEF1EC">{String(data?.kode ?? 'LEMBAR').slice(0, 12)}</text>
-      <text x={430} y={80} fontFamily={MONO} fontWeight={700} fontSize={22} letterSpacing={3} fill="#EEF1EC">{String(data?.judul ?? '').slice(0, 26).toUpperCase()}</text>
-      <text x={430} y={110} fontFamily={MONO} fontSize={18} letterSpacing={2} fill="#8B9AA6">{String(data?.sub ?? '').slice(0, 34).toUpperCase()}</text>
-      <text x={90} y={210} fontFamily={MONO} fontSize={22} letterSpacing={3} fill="#5A6670">{String(kolom[0] ?? '').toUpperCase()}</text>
-      <text x={990} y={210} textAnchor="end" fontFamily={MONO} fontSize={22} letterSpacing={3} fill="#5A6670">{String(kolom[1] ?? '').toUpperCase()}</text>
-      <line x1={90} y1={228} x2={990} y2={228} stroke={INK} strokeWidth={2} />
+      <text x={KI} y={102} fontFamily={SANS} fontWeight={900} fontSize={fKode} fill="#EEF1EC">{kode}</text>
+      {judul && <text x={990} y={sub ? 80 : 94} textAnchor="end" fontFamily={MONO} fontWeight={700} fontSize={fJudul} letterSpacing={3} fill="#EEF1EC">{judul}</text>}
+      {sub && <text x={990} y={112} textAnchor="end" fontFamily={MONO} fontSize={fSub} letterSpacing={2} fill="#8B9AA6">{sub}</text>}
+      <text x={KI} y={210} fontFamily={MONO} fontSize={22} letterSpacing={3} fill="#5A6670">{potong(String(kolom[0] ?? '').toUpperCase(), 26, 'lembar kolom')}</text>
+      <text x={KA} y={210} textAnchor="end" fontFamily={MONO} fontSize={22} letterSpacing={3} fill="#5A6670">{potong(String(kolom[1] ?? '').toUpperCase(), 20, 'lembar kolom')}</text>
+      <line x1={KI} y1={228} x2={990} y2={228} stroke={INK} strokeWidth={2} />
       {baris.map((b, i) => {
         const a = 0.25 + i * step;
         const k = naik(lt, a, 0.35);
         const y = 320 + i * tinggiBaris;
-        const mentah = String(b?.nilai ?? '');
+        const mentah = potong(b?.nilai ?? '', 12, 'lembar nilai');
         const angka = /^-?\d+(\.\d+)?$/.test(mentah) ? Number(mentah) : null;
         const tampil = angka !== null ? String(Math.round(interpolate(lt, [a + 0.1, a + 0.8], [0, angka], { ...C, easing: Easing.out(Easing.cubic) }))) : mentah;
         const w = b?.warna === 'amber' || b?.warna === 'kuning' ? '#C77700' : b?.warna === 'merah' ? '#C53B3B' : b?.warna === 'hijau' ? '#178A5B' : '#0E8F99';
+        // nilai diukur dulu, nama & keterangan mengisi sisa ruang di kirinya
+        const fNilai = ukuranPas(mentah, mentah.length > 7 ? 52 : 68, 380, MONO, 800);
+        const lNilai = lebarTeks(mentah, fNilai, MONO, 800);
+        const catatan = b?.catatan ? potong(b.catatan, 24, 'lembar catatan') : '';
+        const lCatatan = catatan ? lebarTeks(catatan, 26, SANS, 700) : 0;
+        const nama = potong(b?.nama ?? '', 26, 'lembar nama');
+        const ket = potong(b?.ket ?? '', 40, 'lembar ket');
+        const fNama = ukuranPas(nama, 44, KA - KI - lNilai - 36, SANS, 800, 0, 26);
+        const fKet = ukuranPas(ket, 28, KA - KI - Math.max(lNilai, lCatatan) - 36, SANS, 400, 0, 18);
         return (
           <g key={i} opacity={k} transform={`translate(${(1 - k) * -40},0)`}>
-            <text x={90} y={y} fontFamily={SANS} fontWeight={800} fontSize={44} fill={INK}>{String(b?.nama ?? '').slice(0, 20)}</text>
-            <text x={90} y={y + 48} fontFamily={SANS} fontSize={28} fill="#45525C">{String(b?.ket ?? '').slice(0, 34)}</text>
-            <text x={990} y={y + 12} textAnchor="end" fontFamily={MONO} fontWeight={800} fontSize={mentah.length > 7 ? 52 : 68} fill={w}>{tampil.slice(0, 12)}</text>
-            {b?.catatan && (
-              <text x={990} y={y + 56} textAnchor="end" fontFamily={SANS} fontWeight={700} fontSize={26} fill={w} opacity={naik(lt, a + 0.9)}>{String(b.catatan).slice(0, 24)}</text>
+            <text x={KI} y={y} fontFamily={SANS} fontWeight={800} fontSize={fNama} fill={INK}>{nama}</text>
+            <text x={KI} y={y + 48} fontFamily={SANS} fontSize={fKet} fill="#45525C">{ket}</text>
+            <text x={KA} y={y + 12} textAnchor="end" fontFamily={MONO} fontWeight={800} fontSize={fNilai} fill={w}>{tampil}</text>
+            {catatan && (
+              <text x={KA} y={y + 56} textAnchor="end" fontFamily={SANS} fontWeight={700} fontSize={26} fill={w} opacity={naik(lt, a + 0.9)}>{catatan}</text>
             )}
-            <line x1={90} y1={y + 92} x2={990} y2={y + 92} stroke="#C9D1C8" strokeWidth={2} />
+            <line x1={KI} y1={y + 92} x2={990} y2={y + 92} stroke="#C9D1C8" strokeWidth={2} />
           </g>
         );
       })}
       {data?.sumber && (
-        <text x={90} y={950} fontFamily={MONO} fontSize={20} fill="#5A6670" opacity={naik(lt, 0.3 + baris.length * step)}>
-          {`Sumber: ${String(data.sumber).slice(0, 70)}`}
+        <text x={KI} y={950} fontFamily={MONO} fontSize={ukuranPas(`Sumber: ${potong(data.sumber, 80, 'lembar sumber')}`, 20, 830, MONO, 400, 0, 14)} fill="#5A6670" opacity={naik(lt, 0.3 + baris.length * step)}>
+          {`Sumber: ${String(data.sumber).slice(0, 80)}`}
         </text>
       )}
     </Svg>
