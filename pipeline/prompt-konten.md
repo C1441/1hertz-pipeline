@@ -28,6 +28,13 @@ KOMPONEN ADEGAN (pilih satu per adegan) dan isi "data":
 - garis_waktu: {"maks":3,"satuan":"dtk","jalur":[{"nama":"CPU","blok":[{"mulai":0,"selesai":0.9,"label":"delay(1000)","warna":"merah"}]}],"tanda":[{"jalur":1,"t":0.4,"jenis":"err","label":"DIABAIKAN"}]}  ← urutan waktu (delay, interrupt, watchdog); maks 3 jalur
 - lembar: {"kode":"LEMBAR 3-A","judul":"Baud bawaan","sub":"...","kolom":["Board","Baud"],"baris":[{"nama":"ESP32","ket":"log boot ROM","nilai":"115200","warna":"cyan"}],"sumber":"..."}  ← tabel datasheet terang, maks 4 baris; nilai angka akan menghitung naik
 
+BATAS PANJANG TEKS (lebih dari ini = teks terpotong → QA visual menolak video):
+- log_serial: maks 8 baris, tiap baris ≤ 90 karakter; judul ≤ 40.   kartu_kode: maks 9 baris, tiap baris ≤ 58 karakter.
+- kartu_status: label ≤ 40, tiap status ≤ 24 (paling enak ≤ 14).   x_vs_y: judul kolom ≤ 14, maks 3 poin, tiap poin ≤ 45.
+- diagram: maks 5 elemen, tiap ≤ 50.   kartu_masalah / kartu_solusi: ≤ 110.   cta: ≤ 100.
+- garis_waktu: nama jalur ≤ 28, label tanda ≤ 16, label blok sependek mungkin.
+- lembar: kode ≤ 16, judul ≤ 34, sub ≤ 44, kolom ≤ 20, nama ≤ 26, ket ≤ 40, nilai ≤ 12, catatan ≤ 24, sumber ≤ 80, maks 4 baris.
+
 BENTUK JSON (ikuti persis nama field-nya):
 {
  "versi_skema":"1.0",
