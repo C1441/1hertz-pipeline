@@ -15,3 +15,5 @@
 | 2026-10-16 17:56 | papan-ide Papan Ide Claude 2026-10-16 #2 [2026-10-17] | privat ✅ | Idg4RlUxApg | produksi 1.9 menit · ON AIR ✅ |
 | 2026-10-17 00:39 | Dokumen tanpa judul | privat ✅ | d8Z0a_ytb1E | produksi 2.4 menit · ON AIR ✅ |
 | 2026-10-17 09:30 | Dokumen tanpa judul | privat ✅ | kb64LjwOsHQ | produksi 3.0 menit · ON AIR ✅ |
+| 2026-10-17 15:20 | 2026-10-17-ledcsetup-kode-ai.json | privat ✅ | BpBS0Ui6L-E | produksi 3.0 menit · ON AIR ✅ |
+| 2026-10-17 15:23 | 2026-10-17-esp32-cam-deteksi-wajah-hilang.json | privat ✅ | 7nHM6OOgOk8 | produksi 3.2 menit · ON AIR ✅ |
