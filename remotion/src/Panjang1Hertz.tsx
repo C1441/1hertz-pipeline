@@ -42,24 +42,38 @@ export const linimasaKira = (d: DataPanjang): Segmen[] => {
 };
 
 /* ---------------- foto (atau gambar pengganti kalau belum ada) ---------------- */
-const Foto: React.FC<{ src?: string; nama: string; w: number; h: number; isi?: 'contain' | 'cover'; bulat?: boolean }> = ({ src, nama, w: lw, h: lh, isi = 'contain', bulat }) => (
-  <div style={{ width: lw, height: lh, borderRadius: bulat ? '50%' : 18, overflow: 'hidden', background: '#EEF1EC', boxShadow: '0 22px 50px rgba(0,0,0,0.55)', position: 'relative' }}>
-    {src ? (
-      <Img src={staticFile(src)} style={{ width: '100%', height: '100%', objectFit: isi }} />
-    ) : (
-      <svg viewBox="0 0 200 200" width="100%" height="100%">
-        <rect x={50} y={60} width={100} height={80} rx={8} fill="#1D2630" />
-        {Array.from({ length: 6 }, (_, i) => (
-          <g key={i}>
-            <rect x={60 + i * 15} y={44} width={6} height={16} fill="#9AA6B0" />
-            <rect x={60 + i * 15} y={140} width={6} height={16} fill="#9AA6B0" />
-          </g>
-        ))}
-        <text x={100} y={106} textAnchor="middle" fontFamily={MONO} fontSize={13} fill="#EEF3F6">{nama.slice(0, 12)}</text>
-      </svg>
-    )}
-  </div>
-);
+const Foto: React.FC<{ src?: string; nama: string; w: number; h: number; isi?: 'contain' | 'cover'; bulat?: boolean; kaki?: number }> = ({ src, nama, w: lw, h: lh, isi = 'contain', bulat, kaki = 12 }) => {
+  // tanpa foto: ilustrasi chip DIP yang digambar sendiri (jumlah kaki sesuai chip)
+  const n = Math.max(2, Math.round(kaki / 2));
+  const bw = Math.max(190, 40 + n * 22);
+  const x0 = 200 - bw / 2;
+  return (
+    <div style={{ width: lw, height: lh, borderRadius: bulat ? '50%' : 18, overflow: 'hidden', background: '#EEF1EC', boxShadow: '0 22px 50px rgba(0,0,0,0.55)', position: 'relative' }}>
+      {src ? (
+        <Img src={staticFile(src)} style={{ width: '100%', height: '100%', objectFit: isi }} />
+      ) : (
+        <svg viewBox="0 0 400 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+          <ellipse cx={200} cy={232} rx={bw * 0.62} ry={16} fill="#000" opacity={0.12} />
+          {Array.from({ length: n }, (_, i) => {
+            const x = 200 - ((n - 1) * 22) / 2 - 5 + i * 22;
+            return (
+              <g key={i}>
+                <path d={`M${x},96 h10 v-26 h-4 v-10 h-2 v10 h-4 z`} fill="#B9C2C9" stroke="#8A949C" strokeWidth={1} />
+                <path d={`M${x},204 h10 v26 h-4 v10 h-2 v-10 h-4 z`} fill="#B9C2C9" stroke="#8A949C" strokeWidth={1} />
+              </g>
+            );
+          })}
+          <rect x={x0} y={96} width={bw} height={108} rx={6} fill="#22272D" />
+          <rect x={x0} y={96} width={bw} height={10} rx={4} fill="#2F363D" />
+          <path d={`M${x0},138 a12,12 0 0 1 0,24`} fill="#151A1F" />
+          <circle cx={x0 + 18} cy={186} r={5} fill="#151A1F" />
+          <text x={210} y={158} textAnchor="middle" fontFamily={MONO} fontWeight={700} fontSize={Math.min(24, (bw - 50) / (nama.length * 0.62))} fill="#D7DDE2">{nama.toUpperCase()}</text>
+          <text x={200} y={284} textAnchor="middle" fontFamily={MONO} fontSize={12} letterSpacing={2} fill="#7A858D">{kaki}-PIN DIP · ILUSTRASI</text>
+        </svg>
+      )}
+    </div>
+  );
+};
 
 /* ---------------- judul kinetik 2 baris (gaya Shorts) ---------------- */
 const BarisKinetik: React.FC<{ t: number; a: number; teks: string; warna: string; tunda: number; ukuran: number }> = ({ t, a, teks, warna, tunda, ukuran }) => (
@@ -145,7 +159,7 @@ const Panggung: React.FC<{ t: number; s: Segmen; d: DataPanjang; foto: Record<st
           return (
             <div key={i} style={{ position: 'absolute', left: x0 + i * jarak - ukuran / 2, top: 560 - ukuran / 2, width: ukuran, textAlign: 'center', opacity: muncul * (selesai ? 0.45 : 1), transform: `scale(${muncul * denyut})` }}>
               <div style={{ borderRadius: '50%', border: `5px solid ${fokus ? K.cyan : selesai ? K.ok : K.garis}`, boxShadow: fokus ? `0 0 40px ${K.cyan}88` : undefined }}>
-                <Foto src={foto[x.kunci]} nama={x.nama} w={ukuran - 10} h={ukuran - 10} isi="cover" bulat />
+                <Foto src={foto[x.kunci]} nama={x.nama} kaki={(x as any).kaki} w={ukuran - 10} h={ukuran - 10} isi="cover" bulat />
               </div>
               <div style={{ marginTop: 16, fontSize: 26, fontWeight: 800, color: K.text, whiteSpace: 'nowrap', marginLeft: -60, marginRight: -60 }}>{x.nama}</div>
               <div style={{ fontFamily: MONO, fontSize: 22, color: fokus ? K.cyan : K.dim }}>{selesai ? '✓ ' : ''}RAM {x.ram_label}</div>
@@ -162,7 +176,7 @@ const Panggung: React.FC<{ t: number; s: Segmen; d: DataPanjang; foto: Record<st
     return (
       <>
         <div style={{ position: 'absolute', left: 150, top: 290, opacity: k1, transform: `translateY(${(1 - k1) * 40}px) scale(${0.96 + 0.04 * k1})` }}>
-          <Foto src={foto[it!.kunci]} nama={it!.nama} w={820} h={540} />
+          <Foto src={foto[it!.kunci]} nama={it!.nama} kaki={(it as any).kaki} w={820} h={540} />
         </div>
         <div style={{ position: 'absolute', left: 1060, top: 360, width: 720, opacity: k2, transform: `translateX(${(1 - k2) * 40}px)` }}>
           <div style={{ fontFamily: MONO, fontSize: 26, letterSpacing: 4, color: K.cyan }}>MIKROKONTROLER #{s.item! + 1}</div>
@@ -182,7 +196,7 @@ const Panggung: React.FC<{ t: number; s: Segmen; d: DataPanjang; foto: Record<st
     return (
       <>
         <div style={{ position: 'absolute', left: 140, top: 330, opacity: k1, transform: `scale(${0.95 + 0.05 * k1})` }}>
-          <Foto src={foto[it!.kunci]} nama={it!.nama} w={600} h={420} />
+          <Foto src={foto[it!.kunci]} nama={it!.nama} kaki={(it as any).kaki} w={600} h={420} />
         </div>
         <div style={{ position: 'absolute', left: 860, top: 270 }}>
           <LembarSpek t={t} a={a} d={dur} it={it!} no={s.item! + 1} />
@@ -410,7 +424,7 @@ export const Panjang1Hertz: React.FC<PropsPanjang> = ({ data, segmen: segmenProp
       {it && (
         <div style={{ position: 'absolute', top: 26, right: 56, textAlign: 'center' }}>
           <div style={{ border: `4px solid ${K.cyan}`, borderRadius: '50%' }}>
-            <Foto src={foto[it.kunci]} nama={it.nama} w={100} h={100} isi="cover" bulat />
+            <Foto src={foto[it.kunci]} nama={it.nama} kaki={(it as any).kaki} w={100} h={100} isi="cover" bulat />
           </div>
           <div style={{ fontFamily: MONO, fontSize: 20, color: K.cyan, marginTop: 6 }}>0{s.item! + 1}/0{data.item.length}</div>
         </div>

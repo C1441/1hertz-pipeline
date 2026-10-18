@@ -11,12 +11,7 @@
    "chip": "Microchip ATtiny85",
    "kelas": "8-bit AVR",
    "foto": {
-    "cari": [
-     "ATtiny85",
-     "ATtiny",
-     "Digispark"
-    ],
-    "wajib": "tiny|digispark"
+    "ilustrasi": true
    },
    "ram": 0.5,
    "ram_label": "512 B",
@@ -63,7 +58,8 @@
     "spek": "Isinya prosesor delapan bit sampai dua puluh megahertz, flash delapan kilobyte, dan RAM cuma lima ratus dua belas byte. Pin yang bisa kamu pakai cuma enam.",
     "guna": "Chip ini pas buat proyek mungil: lampu LED hias, sensor sederhana, atau alat kecil yang jalan pakai baterai.",
     "plusmin": "Kelebihannya kecil, murah, dan hemat daya. Kelemahannya, pin dan memorinya sangat terbatas, dan nggak ada port USB, jadi kamu butuh alat tambahan buat upload program."
-   }
+   },
+   "kaki": 8
   },
   {
    "kunci": "uno",

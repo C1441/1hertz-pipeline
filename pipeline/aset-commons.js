@@ -88,6 +88,7 @@ async function unggah(token, nama, induk, mime, isi, keterangan) {
   const kredit = [];
   const lembar = [];
   for (const it of data.item) {
+    if (it.foto?.ilustrasi) { log(`${it.kunci}: pakai ilustrasi buatan sendiri`); continue; }
     let ks = [];
     try { ks = await kandidat(it); } catch (e) { log(it.kunci, 'cari gagal:', e.message); }
     log(`${it.kunci}: ${ks.length} kandidat (${ks.slice(0, 4).map((k) => k.judul).join(' | ')})`);
