@@ -41,9 +41,18 @@
     }
    ],
    "guna": [
-    "Lampu LED hias",
-    "Sensor sederhana",
-    "Alat bertenaga baterai kecil"
+    {
+     "teks": "Lampu LED hias",
+     "ikon": "led"
+    },
+    {
+     "teks": "Sensor sederhana",
+     "ikon": "sensor"
+    },
+    {
+     "teks": "Alat bertenaga baterai kecil",
+     "ikon": "baterai"
+    }
    ],
    "plus": [
     "Kecil dan murah",
@@ -98,9 +107,18 @@
     }
    ],
    "guna": [
-    "Belajar coding hardware",
-    "Robot sederhana",
-    "Lampu dan alat ukur otomatis"
+    {
+     "teks": "Belajar coding hardware",
+     "ikon": "kode"
+    },
+    {
+     "teks": "Robot sederhana",
+     "ikon": "robot"
+    },
+    {
+     "teks": "Lampu & alat ukur otomatis",
+     "ikon": "ukur"
+    }
    ],
    "plus": [
     "Tutorial dan library paling banyak",
@@ -154,9 +172,18 @@
     }
    ],
    "guna": [
-    "Printer 3D rakitan",
-    "Robot dengan banyak sensor",
-    "Panel kontrol"
+    {
+     "teks": "Printer 3D rakitan",
+     "ikon": "printer3d"
+    },
+    {
+     "teks": "Robot dengan banyak sensor",
+     "ikon": "sensor"
+    },
+    {
+     "teks": "Panel kontrol",
+     "ikon": "panel"
+    }
    ],
    "plus": [
     "Pin melimpah",
@@ -210,9 +237,18 @@
     }
    ],
    "guna": [
-    "Belajar MicroPython",
-    "Keyboard makro lewat USB",
-    "Protokol khusus pakai PIO"
+    {
+     "teks": "Belajar MicroPython",
+     "ikon": "python"
+    },
+    {
+     "teks": "Keyboard makro lewat USB",
+     "ikon": "keyboard"
+    },
+    {
+     "teks": "Protokol khusus pakai PIO",
+     "ikon": "protokol"
+    }
    ],
    "plus": [
     "Dual core",
@@ -269,9 +305,18 @@
     }
    ],
    "guna": [
-    "Smart home",
-    "Monitoring sensor via internet",
-    "Web server kecil"
+    {
+     "teks": "Smart home",
+     "ikon": "rumah"
+    },
+    {
+     "teks": "Pantau sensor lewat internet",
+     "ikon": "cloud"
+    },
+    {
+     "teks": "Web server kecil",
+     "ikon": "server"
+    }
    ],
    "plus": [
     "WiFi dan Bluetooth bawaan",
@@ -325,9 +370,18 @@
     }
    ],
    "guna": [
-    "Audio digital",
-    "Synthesizer dan MIDI",
-    "Kontrol super cepat"
+    {
+     "teks": "Audio digital",
+     "ikon": "audio"
+    },
+    {
+     "teks": "Synthesizer & MIDI",
+     "ikon": "synth"
+    },
+    {
+     "teks": "Kontrol super cepat",
+     "ikon": "kilat"
+    }
    ],
    "plus": [
     "Paling kencang di daftar ini",
