@@ -35,8 +35,11 @@ Contoh lengkap: `remotion/src/contoh-panjang-mikrokontroler.json` di repo C1441/
     "spek": [ {"label":"Clock","nilai":"240","satuan":"MHz"}, ... ], // maks 5 baris; angka desimal boleh ("4.2")
     "guna": [ {"teks":"Smart home","ikon":"rumah"}, ... ],           // 3 kartu
     "plus": ["..",".."], "minus": ["..",".."],
-    "hantaman": {"segmen":"spek","kata":"32-BIT."},                  // opsional
-    "vo": { "kenalan":"..", "spek":"..", "guna":"..", "plusmin":".." }
+    "hantaman": {"segmen":"spek","kata":"LOMPAT!"},                  // opsional; kata jembatan, jangan bocorkan data sebelum narasi
+    "kejutan": {"angka":"10","satuan":"pin sentuh","teks":"..",       // opsional: adegan FAKTA UNIK (setelah spek)
+                "kata_angka":"sepuluh","kata_teks":"Sambungkan"},    //   angka/teks muncul saat kata ini diucapkan; sebelumnya "?" berdenyut
+    // atau "kejutan": {"pecah":[{"k":"RP","arti":"Raspberry Pi","kata":"RP"}, ...]}  → kode dipecah per kotak
+    "vo": { "kenalan":"..", "spek":"..", "kejutan":"..", "guna":"..", "plusmin":".." }
   } ],
   "vo": { "intro":"..", "banding":"..", "cta":".." },
   "publikasi": { "judul":"..", "deskripsi":"..", "tags_youtube":[..] },

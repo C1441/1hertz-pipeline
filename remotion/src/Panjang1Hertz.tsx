@@ -19,11 +19,16 @@ type Guna = string | { teks: string; ikon: string };
 export type Item = {
   kunci: string; nama: string; chip: string; kelas: string; ram: number; ram_label: string;
   spek: Spek[]; guna: Guna[]; plus: string[]; minus: string[]; kaki?: number;
-  vo: { kenalan: string; spek: string; guna: string; plusmin: string };
+  vo: { kenalan: string; spek: string; kejutan?: string; guna: string; plusmin: string };
   hantaman?: { segmen: string; kata: string };
+  // fakta unik per bab: angka besar (menghitung kalau angka) + teks, ATAU kode yang dipecah per bagian
+  // kata_angka / kata_teks: kata di narasi yang memunculkan angka / kartu teks (supaya data tidak bocor sebelum disebut)
+  kejutan?: { angka?: string; satuan?: string; teks?: string; kata_angka?: string; kata_teks?: string; pecah?: { k: string; arti: string; kata?: string }[] };
 };
 export type DataPanjang = { id: string; judul_video: string; tag?: string; item: Item[]; vo: { intro: string; banding: string; cta: string } };
-export type Segmen = { jenis: 'intro' | 'menu' | 'kenalan' | 'spek' | 'guna' | 'plusmin' | 'banding' | 'cta'; item?: number; mulai: number; selesai: number; vo: string };
+export type Segmen = { jenis: 'intro' | 'menu' | 'kenalan' | 'spek' | 'kejutan' | 'guna' | 'plusmin' | 'banding' | 'cta'; item?: number; mulai: number; selesai: number; vo: string };
+/** urutan adegan tiap item; "kejutan" hanya kalau vo.kejutan diisi */
+export const urutanItem = (it: Item) => (['kenalan', 'spek', 'kejutan', 'guna', 'plusmin'] as const).filter((j) => j !== 'kejutan' || !!it.vo.kejutan);
 type Kata = { teks: string; mulai: number; selesai: number };
 export type PropsPanjang = { data: DataPanjang; segmen?: Segmen[]; audio?: string; kata?: Kata[]; foto?: Record<string, string>; kredit?: string; musik?: string; total?: number };
 
@@ -37,7 +42,7 @@ export const linimasaKira = (d: DataPanjang): Segmen[] => {
   tambah({ jenis: 'intro', vo: d.vo.intro }, durasiKira(d.vo.intro));
   d.item.forEach((it, i) => {
     tambah({ jenis: 'menu', item: i, vo: '' }, JEDA_MENU);
-    (['kenalan', 'spek', 'guna', 'plusmin'] as const).forEach((j) => tambah({ jenis: j, item: i, vo: it.vo[j] }, durasiKira(it.vo[j])));
+    urutanItem(it).forEach((j) => tambah({ jenis: j, item: i, vo: it.vo[j] ?? '' }, durasiKira(it.vo[j] ?? '')));
   });
   tambah({ jenis: 'banding', vo: d.vo.banding }, durasiKira(d.vo.banding) + 1);
   tambah({ jenis: 'cta', vo: d.vo.cta }, durasiKira(d.vo.cta) + 1.5);
@@ -61,6 +66,7 @@ const judulSegmen = (s: Segmen, d: DataPanjang): [string, string, Warna] => {
     case 'menu': return [`Tangga ${no} dari 0${d.item.length}`, it ? it.nama : '', 'amber'];
     case 'kenalan': return [`${no}. ${it!.nama}`, it!.chip, 'cyan'];
     case 'spek': return [it!.nama, 'spesifikasi', 'amber'];
+    case 'kejutan': return [it!.nama, 'tahu nggak?', 'amber'];
     case 'guna': return [it!.nama, 'dipakai buat apa?', 'cyan'];
     case 'plusmin': return [it!.nama, 'kelebihan & kelemahan', 'ok'];
     case 'banding': return ['Kalau dijejerkan', 'RAM naik 2.000×', 'amber'];
@@ -200,6 +206,66 @@ const Panggung: React.FC<{ t: number; s: Segmen; d: DataPanjang; foto: Record<st
           <LembarSpek t={t} a={a} d={dur} it={it!} no={s.item! + 1} aktif={Math.min(baris, it!.spek.length - 1)} />
         </div>
       </>
+    );
+  }
+  if (s.jenis === 'kejutan') {
+    const kj = it!.kejutan ?? {};
+    const kLabel = interpolate(t, [a + 0.05, a + 0.5], [0, 1], { ...C, easing: Easing.out(Easing.back(1.6)) });
+    const pecah = kj.pecah ?? [];
+    if (pecah.length) {
+      // kode dipecah: tiap kotak muncul saat narasi menyebut bagiannya
+      let batas = a;
+      const tMuncul = pecah.map((p, i) => {
+        const pola = p.kata ? new RegExp(`^${p.kata}$`, 'i') : /^$/;
+        const x = p.kata ? cariWaktu(kata, s, pola, 0.12 + (i * 0.7) / pecah.length, batas) : a + 0.4 + (i * dur * 0.7) / pecah.length;
+        batas = x + 0.05;
+        return x;
+      });
+      const lebarKotak = Math.min(300, 1600 / pecah.length - 30);
+      return (
+        <div style={{ position: 'absolute', left: 0, right: 0, top: 300, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ fontFamily: MONO, fontSize: 28, fontWeight: 800, letterSpacing: 5, color: K.bg, background: K.amber, borderRadius: 999, padding: '8px 26px', transform: `scale(${kLabel})` }}>FAKTA UNIK</div>
+          <div style={{ display: 'flex', gap: 30, marginTop: 50 }}>
+            {pecah.map((p, i) => {
+              const k = interpolate(t, [tMuncul[i] - 0.05, tMuncul[i] + 0.35], [0, 1], { ...C, easing: Easing.out(Easing.back(1.8)) });
+              const aktif = t >= tMuncul[i] && (i === pecah.length - 1 || t < tMuncul[i + 1]);
+              return (
+                <div key={i} style={{ width: lebarKotak, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: Math.min(1, 0.25 + k), transform: `translateY(${(1 - k) * 60}px)` }}>
+                  <div style={{ width: lebarKotak, height: 240, borderRadius: 20, border: `4px solid ${k > 0.5 ? (aktif ? K.amber : K.cyan) : K.garis}`, background: K.card, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontWeight: 900, fontSize: 150, color: k > 0.5 ? (aktif ? K.amber : K.text) : '#3A4855', boxShadow: aktif ? `0 0 50px ${K.amber}55` : 'none', transform: `scale(${aktif ? 1.06 : 1})` }}>{p.k}</div>
+                  <div style={{ marginTop: 22, fontSize: ukuranPas(p.arti, 36, lebarKotak, SANS, 800, 0, 22), fontWeight: 800, color: K.text, textAlign: 'center', opacity: k, minHeight: 50 }}>{p.arti}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+    const mentah = String(kj.angka ?? '');
+    const angka = /^-?\d+(\.\d+)?$/.test(mentah) ? Number(mentah) : null;
+    const tAngka = kj.kata_angka ? cariWaktu(kata, s, new RegExp(`^${kj.kata_angka}$`, 'i'), 0.15) : a + 0.55;
+    const tTeks = kj.kata_teks ? cariWaktu(kata, s, new RegExp(`^${kj.kata_teks}$`, 'i'), 0.45, tAngka) : a + Math.min(2.2, dur * 0.4);
+    const pA = pop(t, tAngka, 0.45);
+    const nilai = angka !== null ? Math.round(interpolate(t, [tAngka + 0.05, tAngka + 1.0], [0, angka], { ...C, easing: Easing.out(Easing.cubic) })) : mentah;
+    const kTeks = naik(t, tTeks, 0.45);
+    return (
+      <div style={{ position: 'absolute', left: 0, right: 0, top: 300, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ fontFamily: MONO, fontSize: 28, fontWeight: 800, letterSpacing: 5, color: K.bg, background: K.amber, borderRadius: 999, padding: '8px 26px', transform: `scale(${kLabel})` }}>FAKTA UNIK</div>
+        <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginTop: 30 }}>
+          {/* teaser "?" mengisi layar sampai narasi menyebut angkanya */}
+          {t < tAngka + 0.3 && (
+            <div style={{ position: 'absolute', top: 0, fontSize: 260, fontWeight: 900, lineHeight: 1, color: K.cyan, opacity: (1 - pA) * (0.55 + 0.25 * Math.sin(t * 5)), transform: `scale(${pop(t, a + 0.3, 0.4) * (1 + 0.05 * Math.sin(t * 5))}) rotate(${Math.sin(t * 2.5) * 6}deg)`, textShadow: `0 0 50px ${K.cyan}66` }}>?</div>
+          )}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 26, opacity: pA, transform: `scale(${0.6 + 0.4 * pA})` }}>
+            <div style={{ fontSize: ukuranPas(String(nilai), 260, 1100, SANS, 900, -8, 120), fontWeight: 900, color: K.amber, letterSpacing: -8, lineHeight: 1, textShadow: `0 0 60px ${K.amber}55` }}>{nilai}</div>
+            {kj.satuan && <div style={{ fontFamily: MONO, fontSize: 56, fontWeight: 800, color: K.text }}>{kj.satuan}</div>}
+          </div>
+        </div>
+        {kj.teks && (
+          <Kartu garis={K.cyan} lebar={1300} style={{ marginTop: 40, textAlign: 'center', opacity: kTeks, transform: `translateY(${(1 - kTeks) * 40}px)` }}>
+            <div style={{ fontSize: ukuranPas(kj.teks, 48, 1220, SANS, 800, 0, 30), fontWeight: 800, color: K.text, lineHeight: 1.2 }}>{kj.teks}</div>
+          </Kartu>
+        )}
+      </div>
     );
   }
   if (s.jenis === 'guna') {
@@ -427,6 +493,7 @@ export const Panjang1Hertz: React.FC<PropsPanjang> = ({ data, segmen: segmenProp
       if (x.jenis === 'kenalan') { b.push({ t: x.mulai + 0.5, f: 'beep', v: 0.22 }); b.push({ t: x.mulai + 1.0, f: 'pop', v: 0.35 }); }
       if (x.jenis === 'guna') [0, 1, 2].forEach((k) => b.push({ t: x.mulai + 0.2 + k * Math.min(1.4, ((x.selesai - x.mulai) * 0.6) / 3), f: 'pop', v: 0.32 }));
       if (x.jenis === 'plusmin') b.push({ t: x.mulai + 0.5, f: 'ding', v: 0.3 });
+      if (x.jenis === 'kejutan') { b.push({ t: x.mulai + 0.1, f: 'riser', v: 0.22 }); b.push({ t: x.mulai + 0.55, f: 'ding', v: 0.32 }); }
       if (x.jenis === 'spek' && x.item != null) data.item[x.item].spek.forEach((_, k) => b.push({ t: x.mulai + 0.3 + k * Math.min(1.1, ((x.selesai - x.mulai) * 0.65) / data.item[x.item!].spek.length), f: 'klik', v: 0.24 }));
       if (x.jenis === 'cta') b.push({ t: x.mulai + 0.2, f: 'pop', v: 0.35 });
       const h = x.item != null ? data.item[x.item].hantaman : undefined;

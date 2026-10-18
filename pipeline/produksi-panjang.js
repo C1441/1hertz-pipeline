@@ -43,7 +43,7 @@ function pcmDari(wav) {
 
   // bab = satu panggilan TTS; segmen = bagian visual di dalam bab
   const bab = [{ segmen: [{ jenis: 'intro', vo: data.vo.intro }] }];
-  data.item.forEach((it, i) => bab.push({ menuSebelum: i, segmen: ['kenalan', 'spek', 'guna', 'plusmin'].map((j) => ({ jenis: j, item: i, vo: it.vo[j] })) }));
+  data.item.forEach((it, i) => bab.push({ menuSebelum: i, segmen: ['kenalan', 'spek', 'kejutan', 'guna', 'plusmin'].filter((j) => j !== 'kejutan' || it.vo.kejutan).map((j) => ({ jenis: j, item: i, vo: it.vo[j] })) }));
   bab.push({ segmen: [{ jenis: 'banding', vo: data.vo.banding }, { jenis: 'cta', vo: data.vo.cta }] });
 
   const ba = spawnSync(process.execPath, [path.join(__dirname, 'buat-audio.js')], { stdio: ['ignore', 'ignore', 'inherit'] });

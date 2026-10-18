@@ -1,0 +1,554 @@
+{
+ "versi_skema": "panjang-1.0",
+ "id": "2026-10-18-mikrokontroler-512b-vs-1mb",
+ "judul_video": "512 Byte vs 1 MB: 6 Mikrokontroler dari Terkecil sampai Terbesar",
+ "tag": "1HERTZ · MIKROKONTROLER",
+ "ukuran_tangga": "RAM",
+ "item": [
+  {
+   "kunci": "attiny85",
+   "nama": "ATtiny85",
+   "chip": "Microchip ATtiny85",
+   "kelas": "8-bit AVR",
+   "foto": {
+    "ilustrasi": true
+   },
+   "ram": 0.5,
+   "ram_label": "512 B",
+   "spek": [
+    {
+     "label": "Prosesor",
+     "nilai": "8-bit AVR"
+    },
+    {
+     "label": "Clock maks",
+     "nilai": "20",
+     "satuan": "MHz"
+    },
+    {
+     "label": "Flash",
+     "nilai": "8",
+     "satuan": "KB"
+    },
+    {
+     "label": "RAM",
+     "nilai": "512",
+     "satuan": "byte"
+    },
+    {
+     "label": "Pin I/O",
+     "nilai": "6"
+    }
+   ],
+   "guna": [
+    {
+     "teks": "Lampu LED hias",
+     "ikon": "led"
+    },
+    {
+     "teks": "Sensor sederhana",
+     "ikon": "sensor"
+    },
+    {
+     "teks": "Alat bertenaga baterai kecil",
+     "ikon": "baterai"
+    }
+   ],
+   "plus": [
+    "Kecil dan murah",
+    "Hemat daya"
+   ],
+   "minus": [
+    "Pin dan memori sangat terbatas",
+    "Chip polos perlu programmer"
+   ],
+   "vo": {
+    "kenalan": "Nomor satu, ATtiny85. Kecilnya kebangetan: chip delapan kaki ini muat di satu ujung jari. Tapi jangan diremehkan, prosesor, memori, dan pin sudah jadi satu di dalamnya.",
+    "spek": "Isinya prosesor delapan bit sampai dua puluh megahertz, flash delapan kilobyte, dan RAM cuma lima ratus dua belas byte. Pin yang bisa kamu pakai? Cuma enam. Jadi harus hemat, kayak akhir bulan.",
+    "guna": "Chip ini pas buat proyek mungil: lampu LED hias, sensor sederhana, atau alat kecil yang jalan pakai baterai.",
+    "plusmin": "Kelebihannya kecil, murah, dan hemat daya. Kelemahannya, pin dan memorinya sangat terbatas, dan kalau pakai chip polosnya, kamu butuh alat tambahan buat upload program.",
+    "kejutan": "Fakta uniknya: ATtiny85 sama sekali nggak punya USB. Tapi ada papan bernama Digispark yang bisa langsung dicolok ke port USB laptop. Rahasianya di bootloader, program kecil yang bikin chip ini pura-pura jadi perangkat USB."
+   },
+   "kaki": 8,
+   "kejutan": {
+    "angka": "0",
+    "satuan": "port USB",
+    "teks": "Tapi Digispark bisa dicolok ke USB berkat bootloader",
+    "kata_angka": "USB",
+    "kata_teks": "Digispark"
+   }
+  },
+  {
+   "kunci": "uno",
+   "nama": "Arduino Uno",
+   "chip": "ATmega328P",
+   "kelas": "8-bit AVR",
+   "foto": {
+    "cari": "Arduino Uno R3",
+    "pilih": 3
+   },
+   "ram": 2,
+   "ram_label": "2 KB",
+   "spek": [
+    {
+     "label": "Prosesor",
+     "nilai": "ATmega328P"
+    },
+    {
+     "label": "Clock",
+     "nilai": "16",
+     "satuan": "MHz"
+    },
+    {
+     "label": "Flash",
+     "nilai": "32",
+     "satuan": "KB"
+    },
+    {
+     "label": "RAM",
+     "nilai": "2",
+     "satuan": "KB"
+    },
+    {
+     "label": "Pin digital / analog",
+     "nilai": "14 / 6"
+    }
+   ],
+   "guna": [
+    {
+     "teks": "Belajar coding hardware",
+     "ikon": "kode"
+    },
+    {
+     "teks": "Robot sederhana",
+     "ikon": "robot"
+    },
+    {
+     "teks": "Lampu & alat ukur otomatis",
+     "ikon": "ukur"
+    }
+   ],
+   "plus": [
+    "Tutorial dan library paling banyak",
+    "Bekerja di 5 volt"
+   ],
+   "minus": [
+    "RAM 2 KB cepat habis",
+    "Tanpa WiFi"
+   ],
+   "vo": {
+    "kenalan": "Nomor dua, naik ke Arduino Uno. Papan yang paling sering jadi board pertama anak teknik. Desainnya terbuka, makanya banyak versi klon yang lebih murah di marketplace.",
+    "spek": "Otaknya ATmega328P, delapan bit, enam belas megahertz. Flash tiga puluh dua kilobyte, RAM dua kilobyte. Ada empat belas pin digital dan enam pin analog, bekerja di lima volt.",
+    "guna": "Uno paling pas buat belajar dan bikin prototipe: belajar coding hardware, robot sederhana, sampai lampu dan alat ukur otomatis.",
+    "plusmin": "Kelebihannya, tutorial dan library-nya paling banyak. Error apa pun, hampir pasti sudah ada yang nanya duluan. Kelemahannya, RAM dua kilobyte cepat habis, dan nggak ada WiFi.",
+    "kejutan": "Pernah kepikiran kenapa namanya Uno? Uno itu bahasa Italia, artinya satu. Nama ini dipilih untuk menandai rilis Arduino IDE versi satu koma nol. Jadi dari awal, Uno memang disiapkan jadi titik mulai."
+   },
+   "kejutan": {
+    "angka": "UNO = 1",
+    "teks": "Bahasa Italia, menandai rilis Arduino IDE 1.0",
+    "kata_angka": "Uno",
+    "kata_teks": "Nama"
+   }
+  },
+  {
+   "kunci": "mega",
+   "nama": "Arduino Mega 2560",
+   "chip": "ATmega2560",
+   "kelas": "8-bit AVR",
+   "foto": {
+    "cari": "Arduino Mega 2560",
+    "pilih": 3
+   },
+   "ram": 8,
+   "ram_label": "8 KB",
+   "spek": [
+    {
+     "label": "Clock",
+     "nilai": "16",
+     "satuan": "MHz"
+    },
+    {
+     "label": "Flash",
+     "nilai": "256",
+     "satuan": "KB"
+    },
+    {
+     "label": "RAM",
+     "nilai": "8",
+     "satuan": "KB"
+    },
+    {
+     "label": "Pin digital / analog",
+     "nilai": "54 / 16"
+    },
+    {
+     "label": "Port serial",
+     "nilai": "4"
+    }
+   ],
+   "guna": [
+    {
+     "teks": "Printer 3D rakitan",
+     "ikon": "printer3d"
+    },
+    {
+     "teks": "Robot dengan banyak sensor",
+     "ikon": "sensor"
+    },
+    {
+     "teks": "Panel kontrol",
+     "ikon": "panel"
+    }
+   ],
+   "plus": [
+    "Pin melimpah",
+    "4 port serial"
+   ],
+   "minus": [
+    "Kecepatan sama dengan Uno",
+    "Papan besar"
+   ],
+   "vo": {
+    "kenalan": "Nomor tiga, Arduino Mega 2560. Kakaknya Uno, badannya jauh lebih panjang. Kalau Uno itu motor, Mega ini mobil bak terbuka.",
+    "spek": "Masih delapan bit dan enam belas megahertz, tapi flash-nya dua ratus lima puluh enam kilobyte dan RAM delapan kilobyte. Pinnya banyak banget: lima puluh empat digital, enam belas analog, dan empat port serial.",
+    "guna": "Mega dipakai kalau pinmu kurang. Banyak papan printer 3D rakitan, seperti RAMPS, dirancang buat dipasang di atas Mega. Robot dengan banyak sensor dan panel kontrol juga cocok.",
+    "plusmin": "Kelebihannya, pin melimpah dan port serialnya banyak. Kelemahannya, kecepatannya sama saja dengan Uno, dan papannya makan tempat.",
+    "kejutan": "Ngomong-ngomong soal Italia, nama Arduino sendiri diambil dari nama bar di kota Ivrea, tempat nongkrong Massimo Banzi, salah satu pendirinya. Bar itu dinamai dari Raja Arduin, yang naik takhta tahun seribu dua, lalu digulingkan dua tahun kemudian."
+   },
+   "kejutan": {
+    "angka": "1002",
+    "satuan": "Masehi",
+    "teks": "Raja Arduin naik takhta, namanya jadi nama bar di Ivrea, lalu nama Arduino",
+    "kata_angka": "seribu",
+    "kata_teks": "Raja"
+   }
+  },
+  {
+   "kunci": "pico",
+   "nama": "Raspberry Pi Pico",
+   "chip": "RP2040",
+   "kelas": "32-bit ARM",
+   "foto": {
+    "cari": "Raspberry Pi Pico",
+    "pilih": 1
+   },
+   "ram": 264,
+   "ram_label": "264 KB",
+   "spek": [
+    {
+     "label": "Prosesor",
+     "nilai": "2× Cortex-M0+"
+    },
+    {
+     "label": "Clock",
+     "nilai": "133",
+     "satuan": "MHz"
+    },
+    {
+     "label": "RAM",
+     "nilai": "264",
+     "satuan": "KB"
+    },
+    {
+     "label": "Flash",
+     "nilai": "2",
+     "satuan": "MB"
+    },
+    {
+     "label": "GPIO",
+     "nilai": "26"
+    }
+   ],
+   "guna": [
+    {
+     "teks": "Belajar MicroPython",
+     "ikon": "python"
+    },
+    {
+     "teks": "Keyboard makro lewat USB",
+     "ikon": "keyboard"
+    },
+    {
+     "teks": "Protokol khusus pakai PIO",
+     "ikon": "protokol"
+    }
+   ],
+   "plus": [
+    "Dual core",
+    "PIO yang fleksibel"
+   ],
+   "minus": [
+    "Versi biasa tanpa WiFi",
+    "Input analog cuma 3"
+   ],
+   "vo": {
+    "kenalan": "Nomor empat, Raspberry Pi Pico. Jangan ketukar, ini bukan komputer Raspberry Pi, tapi mikrokontroler dengan chip RP2040 yang dirancang sendiri oleh Raspberry Pi.",
+    "spek": "Di sini kita lompat jauh ke tiga puluh dua bit. Dua inti prosesor sampai seratus tiga puluh tiga megahertz, RAM dua ratus enam puluh empat kilobyte, flash dua megabyte, dan dua puluh enam GPIO.",
+    "guna": "Pico cocok buat belajar MicroPython, bikin keyboard makro lewat USB, atau bikin protokol khusus pakai fitur PIO, semacam asisten kecil yang ngurus sinyal sendiri.",
+    "plusmin": "Kelebihannya, dual core dan PIO yang fleksibel. Kelemahannya, versi biasanya nggak punya WiFi, dan input analognya cuma tiga.",
+    "kejutan": "Nama chip-nya ternyata kode. RP itu Raspberry Pi. Angka dua, jumlah intinya. Nol, jenis intinya, Cortex M0 plus. Empat, kode ukuran RAM. Dan nol terakhir artinya flash-nya nggak ada di dalam chip."
+   },
+   "hantaman": {
+    "segmen": "spek",
+    "kata": "LOMPAT!"
+   },
+   "kejutan": {
+    "pecah": [
+     {
+      "k": "RP",
+      "arti": "Raspberry Pi",
+      "kata": "RP"
+     },
+     {
+      "k": "2",
+      "arti": "jumlah inti",
+      "kata": "dua"
+     },
+     {
+      "k": "0",
+      "arti": "Cortex-M0+",
+      "kata": "Nol"
+     },
+     {
+      "k": "4",
+      "arti": "ukuran RAM",
+      "kata": "Empat"
+     },
+     {
+      "k": "0",
+      "arti": "flash di luar chip",
+      "kata": "nol"
+     }
+    ]
+   }
+  },
+  {
+   "kunci": "esp32",
+   "nama": "ESP32",
+   "chip": "Espressif ESP32",
+   "kelas": "32-bit Xtensa",
+   "foto": {
+    "cari": "ESP32 development board",
+    "pilih": 0
+   },
+   "ram": 520,
+   "ram_label": "520 KB",
+   "spek": [
+    {
+     "label": "Prosesor",
+     "nilai": "2× Xtensa LX6"
+    },
+    {
+     "label": "Clock",
+     "nilai": "240",
+     "satuan": "MHz"
+    },
+    {
+     "label": "RAM",
+     "nilai": "520",
+     "satuan": "KB"
+    },
+    {
+     "label": "WiFi",
+     "nilai": "2,4 GHz"
+    },
+    {
+     "label": "Bluetooth",
+     "nilai": "4.2"
+    }
+   ],
+   "guna": [
+    {
+     "teks": "Smart home",
+     "ikon": "rumah"
+    },
+    {
+     "teks": "Pantau sensor lewat internet",
+     "ikon": "cloud"
+    },
+    {
+     "teks": "Web server kecil",
+     "ikon": "server"
+    }
+   ],
+   "plus": [
+    "WiFi dan Bluetooth bawaan",
+    "Dual core 240 MHz"
+   ],
+   "minus": [
+    "ADC kurang akurat",
+    "ADC2 mati saat WiFi nyala"
+   ],
+   "vo": {
+    "kenalan": "Nomor lima, ESP32. Bintangnya proyek IoT, buatan Espressif, perusahaan yang sama dengan ESP8266. Kalau proyekmu harus online, kemungkinan besar ujung-ujungnya ke sini.",
+    "spek": "Dua inti tiga puluh dua bit sampai dua ratus empat puluh megahertz, RAM lima ratus dua puluh kilobyte, plus WiFi dua koma empat gigahertz dan Bluetooth bawaan.",
+    "guna": "ESP32 dipakai buat smart home, memantau sensor lewat internet dari HP, sampai bikin web server kecil.",
+    "plusmin": "Kelebihannya, WiFi dan Bluetooth sudah ada di dalam. Kelemahannya, ADC-nya kurang akurat, dan pin ADC2 nggak bisa dipakai waktu WiFi nyala.",
+    "kejutan": "Fitur yang sering terlewat: sepuluh pin ESP32 bisa jadi sensor sentuh. Sambungkan ke kabel atau lempeng logam, sentuh pakai jari, dan ESP32 langsung tahu. Tombol, tanpa tombol."
+   },
+   "kejutan": {
+    "angka": "10",
+    "satuan": "pin sentuh",
+    "teks": "Kabel atau lempeng logam bisa jadi tombol sentuh",
+    "kata_angka": "sepuluh",
+    "kata_teks": "Sambungkan"
+   },
+   "hantaman": {
+    "segmen": "kejutan",
+    "kata": "SENTUH!"
+   }
+  },
+  {
+   "kunci": "teensy",
+   "nama": "Teensy 4.1",
+   "chip": "NXP i.MX RT1062",
+   "kelas": "32-bit ARM",
+   "foto": {
+    "cari": "Teensy 4.1",
+    "pilih": 0
+   },
+   "ram": 1024,
+   "ram_label": "1 MB",
+   "spek": [
+    {
+     "label": "Prosesor",
+     "nilai": "Cortex-M7"
+    },
+    {
+     "label": "Clock",
+     "nilai": "600",
+     "satuan": "MHz"
+    },
+    {
+     "label": "RAM",
+     "nilai": "1024",
+     "satuan": "KB"
+    },
+    {
+     "label": "Flash",
+     "nilai": "8",
+     "satuan": "MB"
+    },
+    {
+     "label": "Pin I/O",
+     "nilai": "55"
+    }
+   ],
+   "guna": [
+    {
+     "teks": "Audio digital",
+     "ikon": "audio"
+    },
+    {
+     "teks": "Synthesizer & MIDI",
+     "ikon": "synth"
+    },
+    {
+     "teks": "Kontrol super cepat",
+     "ikon": "kilat"
+    }
+   ],
+   "plus": [
+    "Paling kencang di daftar ini",
+    "Slot microSD"
+   ],
+   "minus": [
+    "Tanpa WiFi",
+    "Tenaganya sering kebanyakan buat pemula"
+   ],
+   "vo": {
+    "kenalan": "Nomor enam, yang paling besar: Teensy 4.1 buatan PJRC. Clock-nya hampir empat puluh kali clock Arduino Uno. Ini sudah bukan motor lagi, ini motor balap.",
+    "spek": "Prosesornya ARM Cortex-M7 enam ratus megahertz, RAM satu megabyte, flash delapan megabyte, lima puluh lima pin, plus slot microSD.",
+    "guna": "Teensy dipakai buat audio digital, synthesizer dan MIDI, juga kontrol yang butuh respon super cepat.",
+    "plusmin": "Kelebihannya, paling kencang di daftar ini. Kelemahannya, nggak ada WiFi, dan buat proyek pemula tenaganya sering kebanyakan.",
+    "kejutan": "Dan kalau enam ratus megahertz masih kurang, Teensy bisa di-overclock. Ada yang mencoba sampai delapan ratus megahertz tanpa pendingin tambahan, lalu nekat tembus satu gigahertz pakai heatsink bekas. Tapi ingat, makin kencang, makin panas. Jangan coba kalau belum siap kehilangan board."
+   },
+   "hantaman": {
+    "segmen": "kenalan",
+    "kata": "TERBESAR."
+   },
+   "kejutan": {
+    "angka": "800",
+    "satuan": "MHz",
+    "teks": "Tanpa pendingin tambahan. Tembus 1 GHz pakai heatsink bekas",
+    "kata_angka": "delapan",
+    "kata_teks": "nekat"
+   }
+  }
+ ],
+ "vo": {
+  "intro": "Mikrokontroler itu otak kecil di dalam proyek elektronika. Lampu yang nyala sendiri, robot yang jalan, sampai alarm di rumah, semua ada otaknya. Ukurannya beda-beda banget. Ada yang RAM-nya cuma lima ratus dua belas byte, lebih kecil dari satu foto di HP kamu. Ada juga yang satu megabyte, dua ribu kali lipat. Di video ini kita naik tangga: enam mikrokontroler populer, dari yang paling kecil sampai paling besar, diukur dari RAM-nya. Tiap mikrokontroler kita bahas spesifikasinya, kegunaannya, kelebihan, dan kelemahannya. Plus satu fakta unik yang jarang dibahas. Siapin kopi, kita mulai dari yang paling kecil.",
+  "banding": "Kalau dijejerkan, RAM-nya naik dari lima ratus dua belas byte sampai satu megabyte. Tapi ingat, yang paling besar belum tentu yang paling cocok. Kamu nggak butuh truk buat beli gorengan. Butuh yang mungil, pakai ATtiny. Baru belajar, Uno. Butuh banyak pin, Mega. Butuh WiFi, ESP32. Butuh kencang, Teensy.",
+  "cta": "Nah, kamu sekarang pakai mikrokontroler yang mana? Atau ada yang menurutmu harusnya masuk daftar ini? Tulis di komentar, dan subscribe biar nggak ketinggalan video berikutnya."
+ },
+ "publikasi": {
+  "judul": "512 Byte vs 1 MB: 6 Mikrokontroler dari Terkecil sampai Terbesar",
+  "deskripsi": "Dari ATtiny85 sampai Teensy 4.1: spesifikasi, kegunaan, kelebihan, kelemahan, dan satu fakta unik dari enam mikrokontroler populer, diurutkan dari RAM terkecil.",
+  "tags_youtube": [
+   "mikrokontroler",
+   "perbedaan arduino uno dan esp32",
+   "arduino uno",
+   "arduino mega",
+   "esp32",
+   "raspberry pi pico",
+   "attiny85",
+   "teensy 4.1",
+   "mikrokontroler untuk pemula",
+   "belajar elektronika"
+  ]
+ },
+ "sumber": [
+  {
+   "judul": "ATtiny85 specs (eTechnophiles)",
+   "url": "https://www.etechnophiles.com/attiny85-pinout-specs-guide"
+  },
+  {
+   "judul": "Arduino Uno specs (Napier University)",
+   "url": "https://bdavison.napier.ac.uk/iot/Notes/microprocessors/arduino"
+  },
+  {
+   "judul": "Arduino Mega 2560 R3 (Core Electronics)",
+   "url": "https://core-electronics.com.au/arduino-mega-2560-r3.html"
+  },
+  {
+   "judul": "Raspberry Pi Pico (Waveshare)",
+   "url": "https://www.waveshare.com/product/raspberry-pi/boards-kits/raspberry-pi-pico-cat/raspberry-pi-pico.htm"
+  },
+  {
+   "judul": "Espressif ESP32 SoC (Mouser)",
+   "url": "https://www.mouser.com/espressif-esp32-soc/"
+  },
+  {
+   "judul": "Teensy 4.1 (Core Electronics)",
+   "url": "https://core-electronics.com.au/teensy-41-without-ethernet.html"
+  },
+  {
+   "judul": "Espressif: ADC2 tidak bisa dipakai saat Wi-Fi aktif",
+   "url": "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32/api-reference/peripherals/gpio.html"
+  },
+  {
+   "judul": "Arduino Store: arti nama Uno",
+   "url": "https://store.arduino.cc/products/arduino-uno-rev3"
+  },
+  {
+   "judul": "Make: The Making of Arduino (asal nama Arduino)",
+   "url": "https://makezine.com/2011/10/27/the-making-of-arduino/"
+  },
+  {
+   "judul": "Tom's Hardware: arti nama RP2040",
+   "url": "https://www.tomshardware.com/uk/news/raspberry-pi-pico-decoded"
+  },
+  {
+   "judul": "Espressif: ESP32 touch sensor (10 pad)",
+   "url": "https://docs.espressif.com/projects/esp-idf/en/v5.0.9/esp32/api-reference/peripherals/touch_pad.html"
+  },
+  {
+   "judul": "CircuitDigest: ATtiny85 lewat USB dengan bootloader Digispark",
+   "url": "https://circuitdigest.com/microcontroller-projects/attiny85-ic-programming-through-usb-using-digispark-bootloader"
+  },
+  {
+   "judul": "Hackaday: Teensy 4 overclock 1 GHz (Jan 2022)",
+   "url": "https://hackaday.com/tag/overclock"
+  }
+ ]
+}
