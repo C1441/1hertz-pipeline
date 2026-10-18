@@ -11,7 +11,12 @@
    "chip": "Microchip ATtiny85",
    "kelas": "8-bit AVR",
    "foto": {
-    "cari": "ATtiny85"
+    "cari": [
+     "ATtiny85",
+     "ATtiny",
+     "Digispark"
+    ],
+    "wajib": "tiny|digispark"
    },
    "ram": 0.5,
    "ram_label": "512 B",
@@ -66,7 +71,8 @@
    "chip": "ATmega328P",
    "kelas": "8-bit AVR",
    "foto": {
-    "cari": "Arduino Uno R3"
+    "cari": "Arduino Uno R3",
+    "pilih": 3
    },
    "ram": 2,
    "ram_label": "2 KB",
@@ -121,7 +127,8 @@
    "chip": "ATmega2560",
    "kelas": "8-bit AVR",
    "foto": {
-    "cari": "Arduino Mega 2560"
+    "cari": "Arduino Mega 2560",
+    "pilih": 3
    },
    "ram": 8,
    "ram_label": "8 KB",
@@ -176,7 +183,8 @@
    "chip": "RP2040",
    "kelas": "32-bit ARM",
    "foto": {
-    "cari": "Raspberry Pi Pico"
+    "cari": "Raspberry Pi Pico",
+    "pilih": 1
    },
    "ram": 264,
    "ram_label": "264 KB",
@@ -235,7 +243,8 @@
    "chip": "Espressif ESP32",
    "kelas": "32-bit Xtensa",
    "foto": {
-    "cari": "ESP32 development board"
+    "cari": "ESP32 development board",
+    "pilih": 0
    },
    "ram": 520,
    "ram_label": "520 KB",
@@ -289,7 +298,8 @@
    "chip": "NXP i.MX RT1062",
    "kelas": "32-bit ARM",
    "foto": {
-    "cari": "Teensy 4.1"
+    "cari": "Teensy 4.1",
+    "pilih": 0
    },
    "ram": 1024,
    "ram_label": "1 MB",

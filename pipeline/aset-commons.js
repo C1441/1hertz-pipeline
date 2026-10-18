@@ -29,10 +29,20 @@ const bersih = (s) => String(s || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' 
 
 async function kandidat(item) {
   const prop = { prop: 'imageinfo', iiprop: 'url|size|mime|extmetadata', iiurlwidth: '1600' };
-  const j = item.foto?.file
-    ? await api({ action: 'query', titles: item.foto.file, ...prop })
-    : await api({ action: 'query', generator: 'search', gsrsearch: `${item.foto?.cari || item.nama} filetype:bitmap`, gsrnamespace: '6', gsrlimit: '15', ...prop });
-  const pages = Object.values(j.query?.pages || {}).sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+  const daftarCari = [].concat(item.foto?.cari || item.nama);
+  const wajib = item.foto?.wajib ? new RegExp(item.foto.wajib, 'i') : null;
+  let pages = [];
+  if (item.foto?.file) {
+    const j = await api({ action: 'query', titles: item.foto.file, ...prop });
+    pages = Object.values(j.query?.pages || {});
+  } else {
+    for (const q of daftarCari) {
+      const j = await api({ action: 'query', generator: 'search', gsrsearch: `${q} filetype:bitmap`, gsrnamespace: '6', gsrlimit: '20', ...prop });
+      pages.push(...Object.values(j.query?.pages || {}).sort((a, b) => (a.index ?? 0) - (b.index ?? 0)));
+    }
+  }
+  const lihat = new Set();
+  pages = pages.filter((p) => !lihat.has(p.title) && lihat.add(p.title) && (!wajib || wajib.test(p.title)));
   return pages.map((p) => {
     const ii = p.imageinfo?.[0] || {};
     const m = ii.extmetadata || {};

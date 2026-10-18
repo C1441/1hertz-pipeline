@@ -7,6 +7,10 @@ on:
         description: 'File data video panjang di repo'
         required: true
         default: 'remotion/src/contoh-panjang-mikrokontroler.json'
+      hanya_aset:
+        description: 'Cuma kumpulkan foto (cek dulu sebelum render)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -44,10 +48,12 @@ jobs:
       - name: Kumpulkan foto berlisensi bebas (Wikimedia Commons) → Drive aset
         run: node pipeline/aset-commons.js "${{ inputs.data }}"
       - name: TTS per bab + render 16:9
+        if: ${{ !inputs.hanya_aset }}
         run: node pipeline/produksi-panjang.js "${{ inputs.data }}"
       - name: Unggah hasil ke Drive aset/prototipe
+        if: ${{ !inputs.hanya_aset }}
         run: |
-          for f in hasil/*.mp4 hasil/*.deskripsi.txt; do
+          for f in hasil/*.mp4 hasil/*.deskripsi.txt remotion/public/audio/*.wav remotion/out/props-*.json; do
             id=$(node pipeline/unggah-drive.js "$f" prototipe)
             echo "::notice title=Video panjang::$(basename "$f") → Drive aset/prototipe id=$id"
           done
