@@ -3,6 +3,8 @@ import { Composition } from 'remotion';
 import { Short1Hertz } from './Short1Hertz';
 import { Short1Hertz as Short1HertzLama } from './aset/template-lama/Short1Hertz';
 import contoh from './contoh-konten.json';
+import { Panjang1Hertz, linimasaKira } from './Panjang1Hertz';
+import contohPanjang from './contoh-panjang-mikrokontroler.json';
 
 export const FPS = 30;
 
@@ -25,6 +27,21 @@ export const Root: React.FC = () => {
         durationInFrames={FPS * 38}
         defaultProps={{ konten: contoh as any }}
         calculateMetadata={metadata}
+      />
+      {/* Video panjang 16:9 (format katalog) */}
+      <Composition
+        id="Panjang1Hertz"
+        component={Panjang1Hertz as any}
+        width={1920}
+        height={1080}
+        fps={FPS}
+        durationInFrames={FPS * 300}
+        defaultProps={{ data: contohPanjang as any }}
+        calculateMetadata={({ props }: { props: any }) => {
+          const seg = props.segmen ?? linimasaKira(props.data);
+          const akhir = props.total ?? seg[seg.length - 1].selesai;
+          return { durationInFrames: Math.max(1, Math.round(akhir * FPS)) };
+        }}
       />
       {/* Template lama (arsip), tidak dipakai pipeline */}
       <Composition

@@ -1,0 +1,53 @@
+name: Video panjang (prototipe 16:9)
+
+on:
+  workflow_dispatch:
+    inputs:
+      data:
+        description: 'File data video panjang di repo'
+        required: true
+        default: 'remotion/src/contoh-panjang-mikrokontroler.json'
+
+permissions:
+  contents: read
+
+jobs:
+  panjang:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      RENDER_CONCURRENCY: '4'
+      GAYA_TTS: 'santai dan jelas seperti teman yang jago elektronika lagi ngejelasin, tempo sedang, ada penekanan di angka dan nama, bahasa Indonesia sehari-hari'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Font + ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-inter fonts-jetbrains-mono fonts-noto-color-emoji fonts-dejavu-core ffmpeg > /dev/null
+      - name: Cache Remotion
+        uses: actions/cache@v4
+        with:
+          path: remotion/node_modules
+          key: remotion-${{ runner.os }}-${{ hashFiles('remotion/package-lock.json') }}
+      - name: Pasang Remotion
+        working-directory: remotion
+        run: |
+          [ -d node_modules ] || npm ci --no-audit --no-fund
+          npx remotion browser ensure
+      - name: Kumpulkan foto berlisensi bebas (Wikimedia Commons) → Drive aset
+        run: node pipeline/aset-commons.js "${{ inputs.data }}"
+      - name: TTS per bab + render 16:9
+        run: node pipeline/produksi-panjang.js "${{ inputs.data }}"
+      - name: Unggah hasil ke Drive aset/prototipe
+        run: |
+          for f in hasil/*.mp4 hasil/*.deskripsi.txt; do
+            id=$(node pipeline/unggah-drive.js "$f" prototipe)
+            echo "::notice title=Video panjang::$(basename "$f") → Drive aset/prototipe id=$id"
+          done
