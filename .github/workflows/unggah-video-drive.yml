@@ -1,0 +1,42 @@
+name: Unggah video dari Drive ke YouTube (privat)
+
+# Mengunggah mp4 yang SUDAH jadi di Drive (mis. aset/prototipe) ke YouTube sebagai PRIVAT,
+# tanpa TTS dan tanpa render ulang. Berguna saat kuota TTS Gemini habis.
+on:
+  workflow_dispatch:
+    inputs:
+      video_id:
+        description: 'ID file mp4 di Drive'
+        required: true
+      deskripsi_id:
+        description: 'ID file .deskripsi.txt di Drive (bab + kredit + sumber)'
+        required: false
+      data:
+        description: 'File data video di repo (judul & tag dari publikasi)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  unggah:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Unduh dari Drive lalu unggah ke YouTube (PRIVAT)
+        run: |
+          mkdir -p hasil
+          node pipeline/unduh-drive.js "${{ inputs.video_id }}" hasil/video.mp4
+          desk=""
+          if [ -n "${{ inputs.deskripsi_id }}" ]; then node pipeline/unduh-drive.js "${{ inputs.deskripsi_id }}" hasil/video.deskripsi.txt && desk=hasil/video.deskripsi.txt; fi
+          id=$(node pipeline/unggah-youtube.js hasil/video.mp4 "${{ inputs.data }}" $desk 2> >(tee log-unggah.txt >&2)) || {
+            sleep 1; echo "::error title=Unggah gagal::$(tail -3 log-unggah.txt | tr '\n' ' ' | cut -c1-1000)"; exit 1; }
+          echo "::notice title=YouTube::video privat https://youtu.be/$id"
