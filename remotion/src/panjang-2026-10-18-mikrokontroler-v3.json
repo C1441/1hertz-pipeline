@@ -216,10 +216,9 @@
     "kejutan": "Ngomong-ngomong soal Italia, nama Arduino sendiri diambil dari nama bar di kota Ivrea, tempat nongkrong Massimo Banzi, salah satu pendirinya. Bar itu dinamai dari Raja Arduin, yang naik takhta tahun seribu dua, lalu digulingkan dua tahun kemudian."
    },
    "kejutan": {
-    "angka": "1002",
-    "satuan": "Masehi",
-    "teks": "Raja Arduin naik takhta, namanya jadi nama bar di Ivrea, lalu nama Arduino",
-    "kata_angka": "seribu",
+    "angka": "ARDUINO",
+    "teks": "Nama bar di Ivrea, dari Raja Arduin yang naik takhta tahun 1002",
+    "kata_angka": "Arduino",
     "kata_teks": "Raja"
    }
   },
