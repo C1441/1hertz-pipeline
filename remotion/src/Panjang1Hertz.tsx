@@ -114,7 +114,8 @@ const LembarSpek: React.FC<{ t: number; a: number; d: number; it: Item; no: numb
           const m = a + 0.3 + i * step;
           const k = naik(t, m, 0.35);
           const angka = /^-?\d+(\.\d+)?$/.test(s.nilai) ? Number(s.nilai) : null;
-          const tampil = angka !== null ? String(Math.round(interpolate(t, [m + 0.05, m + 0.8], [0, angka], { ...C, easing: Easing.out(Easing.cubic) }))) : s.nilai;
+          const des = (s.nilai.split('.')[1] || '').length;
+          const tampil = angka !== null ? interpolate(t, [m + 0.05, m + 0.8], [0, angka], { ...C, easing: Easing.out(Easing.cubic) }).toFixed(des) : s.nilai;
           return (
             <div key={i} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', borderBottom: '2px solid #C9D1C8', padding: '14px 0', opacity: k, transform: `translateX(${(1 - k) * -30}px)` }}>
               <div style={{ fontWeight: 700, fontSize: 32, color: '#1A232C' }}>{s.label}</div>
