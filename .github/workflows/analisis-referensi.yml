@@ -1,0 +1,30 @@
+name: Analisis video referensi
+
+on:
+  workflow_dispatch:
+    inputs:
+      file_id:
+        description: 'ID file video di Google Drive (dari link drive.google.com/file/d/<ID>/view)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  analisis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: ffmpeg
+        run: which ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null)
+      - name: Bedah video (Gemini) + potongan gambar → Drive
+        run: node pipeline/analisis-referensi.js "${{ inputs.file_id }}"
