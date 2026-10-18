@@ -7,6 +7,10 @@ on:
         description: 'File data video panjang di repo'
         required: true
         default: 'remotion/src/contoh-panjang-mikrokontroler.json'
+      unggah_youtube:
+        description: 'Unggah otomatis ke YouTube (PRIVAT) setelah render'
+        type: boolean
+        default: true
       hanya_aset:
         description: 'Cuma kumpulkan foto (cek dulu sebelum render)'
         type: boolean
@@ -57,3 +61,9 @@ jobs:
             id=$(node pipeline/unggah-drive.js "$f" prototipe)
             echo "::notice title=Video panjang::$(basename "$f") → Drive aset/prototipe id=$id"
           done
+      - name: Unggah ke YouTube (PRIVAT)
+        if: ${{ !inputs.hanya_aset && inputs.unggah_youtube }}
+        run: |
+          v=$(ls hasil/*.mp4 | head -1)
+          id=$(node pipeline/unggah-youtube.js "$v" "${{ inputs.data }}" "${v%.mp4}.deskripsi.txt")
+          echo "::notice title=YouTube::video panjang privat https://youtu.be/$id"
