@@ -63,8 +63,8 @@
     "Tanpa USB, perlu programmer"
    ],
    "vo": {
-    "kenalan": "Nomor satu, ATtiny85. Chip mungil delapan kaki, muat di satu ujung jari. Prosesor, memori, dan pin sudah jadi satu di dalamnya.",
-    "spek": "Isinya prosesor delapan bit sampai dua puluh megahertz, flash delapan kilobyte, dan RAM cuma lima ratus dua belas byte. Pin yang bisa kamu pakai cuma enam.",
+    "kenalan": "Nomor satu, ATtiny85. Chip mungil delapan kaki, muat di satu ujung jari. Jangan diremehkan, prosesor, memori, dan pin sudah jadi satu di dalamnya.",
+    "spek": "Isinya prosesor delapan bit sampai dua puluh megahertz, flash delapan kilobyte, dan RAM cuma lima ratus dua belas byte. Pin yang bisa kamu pakai? Cuma enam. Jadi harus hemat, kayak akhir bulan.",
     "guna": "Chip ini pas buat proyek mungil: lampu LED hias, sensor sederhana, atau alat kecil yang jalan pakai baterai.",
     "plusmin": "Kelebihannya kecil, murah, dan hemat daya. Kelemahannya, pin dan memorinya sangat terbatas, dan nggak ada port USB, jadi kamu butuh alat tambahan buat upload program."
    },
@@ -129,10 +129,10 @@
     "Tanpa WiFi"
    ],
    "vo": {
-    "kenalan": "Nomor dua, Arduino Uno. Papan yang paling sering jadi board pertama anak teknik. Desainnya terbuka, makanya banyak versi klon yang lebih murah.",
+    "kenalan": "Nomor dua, Arduino Uno. Papan yang paling sering jadi board pertama anak teknik. Desainnya terbuka, makanya banyak versi klon yang lebih murah di marketplace.",
     "spek": "Otaknya ATmega328P, delapan bit, enam belas megahertz. Flash tiga puluh dua kilobyte, RAM dua kilobyte. Ada empat belas pin digital dan enam pin analog, bekerja di lima volt.",
-    "guna": "Uno paling pas buat belajar dan bikin prototipe: robot sederhana, lampu otomatis, sampai alat ukur.",
-    "plusmin": "Kelebihannya, tutorial dan library-nya paling banyak. Kelemahannya, RAM dua kilobyte cepat habis, dan nggak ada WiFi."
+    "guna": "Uno paling pas buat belajar dan bikin prototipe: belajar coding hardware, robot sederhana, sampai lampu dan alat ukur otomatis.",
+    "plusmin": "Kelebihannya, tutorial dan library-nya paling banyak. Error apa pun, hampir pasti sudah ada yang nanya duluan. Kelemahannya, RAM dua kilobyte cepat habis, dan nggak ada WiFi."
    }
   },
   {
@@ -194,10 +194,10 @@
     "Papan besar"
    ],
    "vo": {
-    "kenalan": "Nomor tiga, Arduino Mega 2560. Kakaknya Uno, badannya jauh lebih panjang.",
+    "kenalan": "Nomor tiga, Arduino Mega 2560. Kakaknya Uno, badannya jauh lebih panjang. Kalau Uno itu motor, Mega ini mobil bak terbuka.",
     "spek": "Masih delapan bit dan enam belas megahertz, tapi flash-nya dua ratus lima puluh enam kilobyte dan RAM delapan kilobyte. Pinnya banyak banget: lima puluh empat digital, enam belas analog, dan empat port serial.",
-    "guna": "Mega dipakai kalau pinmu kurang. Banyak papan printer 3D rakitan, seperti RAMPS, dirancang buat dipasang di atas Mega.",
-    "plusmin": "Kelebihannya, pin melimpah. Kelemahannya, kecepatannya sama saja dengan Uno, dan papannya makan tempat."
+    "guna": "Mega dipakai kalau pinmu kurang. Banyak papan printer 3D rakitan, seperti RAMPS, dirancang buat dipasang di atas Mega. Robot dengan banyak sensor dan panel kontrol juga cocok.",
+    "plusmin": "Kelebihannya, pin melimpah dan port serialnya banyak. Kelemahannya, kecepatannya sama saja dengan Uno, dan papannya makan tempat."
    }
   },
   {
@@ -259,9 +259,9 @@
     "Input analog cuma 3"
    ],
    "vo": {
-    "kenalan": "Nomor empat, Raspberry Pi Pico. Ini bukan komputer Raspberry Pi, tapi mikrokontroler dengan chip RP2040 yang dirancang sendiri oleh Raspberry Pi.",
+    "kenalan": "Nomor empat, Raspberry Pi Pico. Jangan ketukar, ini bukan komputer Raspberry Pi, tapi mikrokontroler dengan chip RP2040 yang dirancang sendiri oleh Raspberry Pi.",
     "spek": "Di sini kita lompat ke tiga puluh dua bit. Dua inti prosesor sampai seratus tiga puluh tiga megahertz, RAM dua ratus enam puluh empat kilobyte, flash dua megabyte, dan dua puluh enam GPIO.",
-    "guna": "Pico cocok buat belajar MicroPython, bikin keyboard makro lewat USB, atau bikin protokol khusus pakai fitur PIO.",
+    "guna": "Pico cocok buat belajar MicroPython, bikin keyboard makro lewat USB, atau bikin protokol khusus pakai fitur PIO, semacam asisten kecil yang ngurus sinyal sendiri.",
     "plusmin": "Kelebihannya, dual core dan PIO yang fleksibel. Kelemahannya, versi biasanya nggak punya WiFi, dan input analognya cuma tiga."
    },
    "hantaman": {
@@ -327,9 +327,9 @@
     "ADC2 mati saat WiFi nyala"
    ],
    "vo": {
-    "kenalan": "Nomor lima, ESP32. Bintangnya proyek IoT, buatan Espressif, perusahaan yang sama dengan ESP8266.",
+    "kenalan": "Nomor lima, ESP32. Bintangnya proyek IoT, buatan Espressif, perusahaan yang sama dengan ESP8266. Kalau proyekmu harus online, kemungkinan besar ujung-ujungnya ke sini.",
     "spek": "Dua inti tiga puluh dua bit sampai dua ratus empat puluh megahertz, RAM lima ratus dua puluh kilobyte, plus WiFi dua koma empat gigahertz dan Bluetooth bawaan.",
-    "guna": "ESP32 dipakai buat smart home, memantau sensor lewat internet, sampai bikin web server kecil.",
+    "guna": "ESP32 dipakai buat smart home, memantau sensor lewat internet dari HP, sampai bikin web server kecil.",
     "plusmin": "Kelebihannya, WiFi dan Bluetooth sudah ada di dalam. Kelemahannya, ADC-nya kurang akurat, dan pin ADC2 nggak bisa dipakai waktu WiFi nyala."
    }
   },
@@ -392,9 +392,9 @@
     "Tenaganya sering kebanyakan buat pemula"
    ],
    "vo": {
-    "kenalan": "Nomor enam, yang paling besar: Teensy 4.1 buatan PJRC. Clock-nya hampir empat puluh kali clock Arduino Uno.",
+    "kenalan": "Nomor enam, yang paling besar: Teensy 4.1 buatan PJRC. Clock-nya hampir empat puluh kali clock Arduino Uno. Ini sudah bukan motor lagi, ini motor balap.",
     "spek": "Prosesornya ARM Cortex-M7 enam ratus megahertz, RAM satu megabyte, flash delapan megabyte, lima puluh lima pin, plus slot microSD.",
-    "guna": "Teensy dipakai buat audio digital, synthesizer, dan kontrol yang butuh respon super cepat.",
+    "guna": "Teensy dipakai buat audio digital, synthesizer dan MIDI, juga kontrol yang butuh respon super cepat.",
     "plusmin": "Kelebihannya, paling kencang di daftar ini. Kelemahannya, nggak ada WiFi, dan buat proyek pemula tenaganya sering kebanyakan."
    },
    "hantaman": {
@@ -404,9 +404,9 @@
   }
  ],
  "vo": {
-  "intro": "Mikrokontroler itu otak kecil di dalam proyek elektronika. Ukurannya beda-beda banget. Ada yang RAM-nya cuma lima ratus dua belas byte, ada yang satu megabyte, dua ribu kali lipat. Di video ini kita naik tangga: enam mikrokontroler populer, dari yang paling kecil sampai paling besar, diukur dari RAM-nya. Tiap mikrokontroler kita bahas spesifikasinya, kegunaannya, kelebihan, dan kelemahannya. Kita mulai dari yang paling kecil.",
-  "banding": "Kalau dijejerkan, RAM-nya naik dari lima ratus dua belas byte sampai satu megabyte. Tapi yang paling besar belum tentu yang paling cocok. Butuh yang mungil, pakai ATtiny. Baru belajar, Uno. Butuh banyak pin, Mega. Butuh WiFi, ESP32. Butuh kencang, Teensy.",
-  "cta": "Kamu sekarang pakai mikrokontroler yang mana? Tulis di komentar, dan subscribe biar nggak ketinggalan video berikutnya."
+  "intro": "Mikrokontroler itu otak kecil di dalam proyek elektronika. Lampu yang nyala sendiri, robot yang jalan, sampai alarm di rumah, semua ada otaknya. Ukurannya beda-beda banget. Ada yang RAM-nya cuma lima ratus dua belas byte, lebih kecil dari satu foto di HP kamu. Ada juga yang satu megabyte, dua ribu kali lipat. Di video ini kita naik tangga: enam mikrokontroler populer, dari yang paling kecil sampai paling besar, diukur dari RAM-nya. Tiap mikrokontroler kita bahas spesifikasinya, kegunaannya, kelebihan, dan kelemahannya. Siapin kopi, kita mulai dari yang paling kecil.",
+  "banding": "Kalau dijejerkan, RAM-nya naik dari lima ratus dua belas byte sampai satu megabyte. Tapi ingat, yang paling besar belum tentu yang paling cocok. Kamu nggak butuh truk buat beli gorengan. Butuh yang mungil, pakai ATtiny. Baru belajar, Uno. Butuh banyak pin, Mega. Butuh WiFi, ESP32. Butuh kencang, Teensy.",
+  "cta": "Nah, kamu sekarang pakai mikrokontroler yang mana? Tulis di komentar, dan subscribe biar nggak ketinggalan video berikutnya."
  },
  "publikasi": {
   "judul": "6 Mikrokontroler dari yang Paling Kecil sampai Paling Besar",
