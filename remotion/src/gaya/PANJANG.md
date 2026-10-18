@@ -59,7 +59,7 @@ Catatan pembuka: ilustrasi pembuka saat ini khusus tema mikrokontroler (otak pro
 2. GitHub → Actions → **"Video panjang (prototipe 16:9)"** → Run workflow (isi path JSON). Centang `hanya_aset` dulu untuk cek foto.
 3. Hasil masuk Drive `aset/prototipe`: mp4, deskripsi (bab + kredit + sumber), suara .wav, props.
 4. QA: jalankan workflow **"Analisis video referensi"** dengan ID mp4 → Gemini menonton + lembar gambar.
-5. Okta tonton → revisi → upload ke YouTube (manual untuk sekarang).
+5. Setelah render, video **otomatis diunggah ke YouTube sebagai PRIVAT** (judul, tag, deskripsi berisi bab + kredit + sumber terisi otomatis). Okta tonton → revisi bila perlu → ubah ke Publik di YouTube Studio. Matikan centang `unggah_youtube` kalau cuma mau uji.
 
 Waktu render ±25–35 menit di GitHub. Suara: Gemini TTS per bab (8 panggilan untuk 6 item).
 
