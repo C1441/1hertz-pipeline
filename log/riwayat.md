@@ -20,3 +20,4 @@
 | 2026-10-17 15:30 | 2026-10-17-asisten-ai-esp32-10-vs-2-detik.json | privat ✅ | TY16YZCv7dQ | ON AIR ✅ · baris dicatat manual (push log run 39044601998 bentrok) |
 | 2026-10-17 18:53 | papan-ide Papan Ide 2026-10-16 #3 [2026-10-18] | privat ✅ | qy-kkpRK2L8 | produksi 1.8 menit · ON AIR ✅ |
 | 2026-10-18 19:20 | papan-ide Papan Ide 2026-10-16 #7 [2026-10-19] | privat ✅ | 0o16iKPM_8I | produksi 3.0 menit · ON AIR ✅ |
+| 2026-10-19 19:57 | papan-ide Papan Ide 2026-10-16 #9 | gagal produksi | - | QA visual: adegan 2 (garis_waktu) (dtk 10.8): tertutup tombol YouTube (kanan bawah): "3 ms" |
