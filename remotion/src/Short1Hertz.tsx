@@ -39,7 +39,7 @@ const TERANG = ['x_vs_y', 'lembar'];
 const PEMBUKA: [RegExp, string][] = [
   [/^(caranya|gimana|bagaimana)$/, 'CARANYA?'],
   [/^(solusinya|fixnya|perbaikannya)$/, 'SOLUSINYA?'],
-  [/^(karena|penyebabnya|sebabnya|kenapa|soalnya|gara)$/, 'KENAPA?'],
+  [/^(karena|penyebabnya|sebabnya|kenapa|soalnya|gara|masalahnya)$/, 'KENAPA?'],
   [/^(bedanya|perbedaannya)$/, 'BEDANYA?'],
   [/^(hasilnya)$/, 'HASILNYA?'],
   [/^(harusnya|seharusnya)$/, 'HARUSNYA?'],
@@ -188,7 +188,10 @@ export const Short1Hertz: React.FC<Props> = ({ konten, audio, kata, amplitudo, m
       const asli = String(a.hantaman || '').trim().toUpperCase().slice(0, 12);
       if (!asli || i === 0 || out.length >= 3) return;
       if (asli.endsWith('?')) {
-        out.push({ i, kata: asli, a: a.mulai });
+        // kata tanya harus nyambung dengan pembuka voiceover ("Penyebabnya, …" → KENAPA?, bukan BEDANYA?)
+        const j = jembatanDari(a.voiceover);
+        if (j && j !== asli) cat.push(`hantaman "${asli}" di adegan ${i + 1} tidak nyambung dengan pembuka voiceover → diganti "${j}"`);
+        out.push({ i, kata: j ?? asli, a: a.mulai });
         return;
       }
       const kunci = bersih(asli);
