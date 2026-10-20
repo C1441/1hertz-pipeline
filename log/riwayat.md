@@ -22,3 +22,4 @@
 | 2026-10-18 19:20 | papan-ide Papan Ide 2026-10-16 #7 [2026-10-19] | privat ✅ | 0o16iKPM_8I | produksi 3.0 menit · ON AIR ✅ |
 | 2026-10-19 19:57 | papan-ide Papan Ide 2026-10-16 #9 | gagal produksi | - | QA visual: adegan 2 (garis_waktu) (dtk 10.8): tertutup tombol YouTube (kanan bawah): "3 ms" |
 | 2026-10-20 01:58 | papan-ide Papan Ide 2026-10-16 #9 [2026-10-20] | privat ✅ | hu3kWiy50SQ | produksi 3.2 menit · ON AIR ✅ |
+| 2026-10-20 02:15 | 2026-10-20-hardware-vs-software-serial-r2.json | privat ✅ | t4HeYURARpY | produksi 2.7 menit · ON AIR ✅ |
