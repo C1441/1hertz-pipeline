@@ -645,8 +645,11 @@ export const GarisWaktu: React.FC<PropsAdegan> = ({ lt, d, data }) => {
   const xp = gx(nilai);
   const yJ = (i: number) => 220 + i * (jalur.length > 2 ? 230 : 300);
   const yAxis = yJ(jalur.length - 1) + 150;
+  // isi digeser ke tengah panggung (1 jalur tidak lagi menggantung di atas)
+  const geserY = Math.max(0, Math.round((1060 - (yAxis + 60 - (yJ(0) - 110))) / 2 - (yJ(0) - 110)));
   return (
     <Svg>
+      <g transform={`translate(0,${geserY})`}>
       <defs>
         <clipPath id="klipGW">
           <rect x={0} y={0} width={xp} height={1060} />
@@ -719,6 +722,7 @@ export const GarisWaktu: React.FC<PropsAdegan> = ({ lt, d, data }) => {
       })}
       <line x1={xp} y1={yJ(0) - 110} x2={xp} y2={yAxis} stroke={K.text} strokeWidth={3} opacity={0.9} />
       <circle cx={xp} cy={yAxis} r={11} fill={K.text} />
+      </g>
     </Svg>
   );
 };
