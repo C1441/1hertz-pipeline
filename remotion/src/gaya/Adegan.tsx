@@ -638,7 +638,8 @@ export const GarisWaktu: React.FC<PropsAdegan> = ({ lt, d, data }) => {
   const maks = Number(data?.maks) > 0 ? Number(data.maks) : 3;
   const sat = String(data?.satuan ?? 'dtk');
   const GX0 = 130;
-  const GX1 = 970;
+  // ujung kanan sumbu di x 870: label waktu & tanda di ujung tidak masuk kolom tombol YouTube (x ≥ 945)
+  const GX1 = 870;
   const gx = (v: number) => GX0 + (Math.max(0, Math.min(maks, v)) / maks) * (GX1 - GX0);
   const nilai = interpolate(lt, [0.4, Math.max(1.2, d - 0.6)], [0, maks], C);
   const xp = gx(nilai);
@@ -698,7 +699,9 @@ export const GarisWaktu: React.FC<PropsAdegan> = ({ lt, d, data }) => {
       </g>
       {tanda.map((m, k) => {
         const v = Number(m.t) || 0;
-        const muncul = interpolate(nilai, [v, v + maks * 0.04], [0, 1], C);
+        // tanda tepat di ujung sumbu (t = maks) tetap muncul
+        const a0 = Math.min(v, maks * 0.96);
+        const muncul = interpolate(nilai, [a0, a0 + maks * 0.04], [0, 1], C);
         if (muncul <= 0) return null;
         const ji = Math.max(0, Math.min(jalur.length - 1, Number(m.jalur) || 0));
         const jenis = m.jenis === 'err' ? 'err' : 'ok';
@@ -706,7 +709,7 @@ export const GarisWaktu: React.FC<PropsAdegan> = ({ lt, d, data }) => {
           <g key={k}>
             <Ikon x={gx(v)} y={yJ(ji) + 5} r={30} jenis={jenis} s={interpolate(muncul, [0, 0.6, 1], [0.4, 1.15, 1])} />
             {m.label && (
-              <text x={gx(v)} y={yJ(ji) + 80} textAnchor="middle" fontFamily={MONO} fontWeight={800} fontSize={24} fill={jenis === 'err' ? K.err : K.ok} opacity={muncul}>
+              <text x={gx(v) > GX1 - 70 ? gx(v) + 30 : gx(v)} y={yJ(ji) + 80} textAnchor={gx(v) > GX1 - 70 ? 'end' : 'middle'} fontFamily={MONO} fontWeight={800} fontSize={24} fill={jenis === 'err' ? K.err : K.ok} opacity={muncul}>
                 {potong(m.label, 16, 'garis_waktu label tanda')}
               </text>
             )}
