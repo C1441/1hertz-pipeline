@@ -83,6 +83,22 @@ export const periksaLayar = (): string[] => {
     const w = k.x2 - k.x1;
     return { ...k, x1: k.x1 + w * 0.02, x2: k.x2 - w * 0.02, y1: k.y1 + h * 0.14, y2: k.y2 - h * 0.14 };
   });
+  // ikon (✓/✕/!) tidak boleh menutupi teks
+  const akar = document.querySelector('[data-qa-akar]');
+  const ra = akar ? akar.getBoundingClientRect() : { left: 0, top: 0, width: 1080, height: 1920 };
+  const sx = 1080 / (ra.width || 1080);
+  const sy = 1920 / (ra.height || 1920);
+  for (const ik of Array.from(document.querySelectorAll('[data-qa="ikon"]'))) {
+    if (opasitasTotal(ik) < 0.6) continue;
+    const r = ik.getBoundingClientRect();
+    if (r.width < 4) continue;
+    const b = { x1: (r.left - ra.left) * sx + 4, y1: (r.top - ra.top) * sy + 4, x2: (r.right - ra.left) * sx - 4, y2: (r.bottom - ra.top) * sy - 4 };
+    for (const a of inti) {
+      const ix = Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1);
+      const iy = Math.min(a.y2, b.y2) - Math.max(a.y1, b.y1);
+      if (ix > 6 && iy > 6) masalah.push(`ikon menutupi teks: "${a.teks}"`);
+    }
+  }
   for (let i = 0; i < inti.length; i++) {
     const a = inti[i];
     if (a.x1 < -2 || a.x2 > 1082 || a.y1 < -2 || a.y2 > 1922) masalah.push(`terpotong di tepi layar: "${a.teks}" [${Math.round(a.x1)},${Math.round(a.y1)}–${Math.round(a.x2)},${Math.round(a.y2)}]`);

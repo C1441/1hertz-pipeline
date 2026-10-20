@@ -707,7 +707,8 @@ export const GarisWaktu: React.FC<PropsAdegan> = ({ lt, d, data }) => {
         const jenis = m.jenis === 'err' ? 'err' : 'ok';
         return (
           <g key={k}>
-            <Ikon x={gx(v)} y={yJ(ji) + 5} r={30} jenis={jenis} s={interpolate(muncul, [0, 0.6, 1], [0.4, 1.15, 1])} />
+            {/* ikon duduk di tepi atas blok, tidak menutupi label blok */}
+            <Ikon x={gx(v)} y={yJ(ji) - 40} r={30} jenis={jenis} s={interpolate(muncul, [0, 0.6, 1], [0.4, 1.15, 1])} />
             {m.label && (
               <text x={gx(v) > GX1 - 70 ? gx(v) + 30 : gx(v)} y={yJ(ji) + 80} textAnchor={gx(v) > GX1 - 70 ? 'end' : 'middle'} fontFamily={MONO} fontWeight={800} fontSize={24} fill={jenis === 'err' ? K.err : K.ok} opacity={muncul}>
                 {potong(m.label, 16, 'garis_waktu label tanda')}

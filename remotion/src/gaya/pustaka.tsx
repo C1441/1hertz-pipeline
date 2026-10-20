@@ -291,7 +291,7 @@ export const Ikon: React.FC<{ x: number; y: number; r?: number; jenis: 'ok' | 'e
   const isi = jenis === 'ok' ? K.ok : jenis === 'err' ? K.err : K.amber;
   const k = r / 28;
   return (
-    <g transform={`translate(${x},${y}) scale(${s * k})`}>
+    <g transform={`translate(${x},${y}) scale(${s * k})`} data-qa="ikon">
       {jenis === 'warn' ? (
         <>
           <path d="M0,-30 L30,24 L-30,24 Z" fill={isi} stroke={isi} strokeWidth={6} strokeLinejoin="round" />
