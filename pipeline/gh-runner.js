@@ -262,7 +262,7 @@ async function modeProses() {
       let onAir = 'ON AIR ✅';
       try { await simpanOnAir(tokenBaru, fileVideo, JSON.parse(fs.readFileSync(fileJson, 'utf8')), idYt); }
       catch (e) { onAir = 'ON AIR gagal'; log('simpan ke ON AIR gagal:', e.message); if (process.env.GITHUB_ACTIONS) console.log(`::warning title=ON AIR::${e.message.slice(0, 300)}`); }
-      catat(`| ${waktu} | ${f.name}${f.ide ? ` [${f.ide.hari}]` : ''} | privat ✅ | ${idYt} | produksi ${menit} menit · ${onAir}${f.revisi ? ` · revisi dari ${f.revisi}` : ''} |`);
+      catat(`| ${waktu} | ${f.name}${f.ide ? ` [${f.ide.hari}]` : ''} | privat ✅ | ${idYt} | produksi ${menit} menit · ${onAir}${f.revisi ? ` · revisi dari ${f.revisi}` : ''} · hook: ${v.hook || '?'}${v.peringatan.length ? ` · ⚠ ${v.peringatan.join(', ').replace(/\|/g, '/')}` : ''} |`);
       keluaran('video_terakhir', idYt);
     } catch (e) {
       log('upload gagal:', e.message); galat('upload gagal: ' + e.message);

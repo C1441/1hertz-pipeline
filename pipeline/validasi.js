@@ -30,6 +30,23 @@ function cek(d) {
   req(typeof p.deskripsi === 'string', 'publikasi.deskripsi tidak ada');
   req(Array.isArray(p.hashtag_youtube) && p.hashtag_youtube.includes('#shorts'), 'hashtag_youtube wajib ada #shorts');
 
+  // Peringatan ritme/hook (28 Okt 2026): TIDAK menolak video, hanya dicatat di log/riwayat.md supaya pola
+  // hook dan ritme bisa dibandingkan dengan performa tiap video. Ambangnya hipotesis yang diuji, bukan aturan YouTube.
+  const peringatan = [];
+  if (a.length) {
+    const dur = (s) => (Number(s.selesai) || 0) - (Number(s.mulai) || 0);
+    const kata1 = String(a[0].voiceover || '').split(/\s+/).filter(Boolean).length;
+    if (dur(a[0]) > 3) peringatan.push(`hook ${dur(a[0]).toFixed(1)} dtk (>3)`);
+    if (kata1 > 8) peringatan.push(`hook ${kata1} kata (>8)`);
+    const rata = a.reduce((x, s) => x + dur(s), 0) / a.length;
+    if (rata > 4.5) peringatan.push(`rata-rata adegan ${rata.toFixed(1)} dtk (>4,5)`);
+    const panjang = a.filter((s) => dur(s) > 7).length;
+    if (panjang) peringatan.push(`${panjang} adegan >7 dtk`);
+    a.forEach((s, i) => { if (i > 0 && s.komponen === a[i - 1].komponen) peringatan.push(`adegan ${i}-${i + 1} komponen sama`); });
+    if (!(d.strategi && d.strategi.hook_tipe)) peringatan.push('strategi.hook_tipe kosong');
+    if (a[a.length - 1].komponen !== 'cta') peringatan.push('adegan terakhir bukan cta');
+  }
+
   const lanjut = err.length === 0 && d.status === 'siap_produksi' && d.kelayakan.keputusan === 'lanjut';
   const tagar = Array.isArray(p.hashtag_youtube) ? p.hashtag_youtube : [];
   const tags = (Array.isArray(p.tags_youtube) && p.tags_youtube.length ? p.tags_youtube : tagar.map((t) => t.replace(/^#/, '')))
@@ -39,6 +56,8 @@ function cek(d) {
     valid: err.length === 0,
     lanjut,
     error: err,
+    peringatan,
+    hook: (d.strategi && d.strategi.hook_tipe) || '',
     id: d.id,
     judul: p.judul,
     deskripsi: (p.deskripsi || '') + '\n\n' + tagar.join(' '),

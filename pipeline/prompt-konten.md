@@ -4,8 +4,12 @@ ATURAN ISI
 - Bahasa Indonesia santai, seperti teman yang jago elektronika. Kalimat pendek, satu ide per kalimat. Tanpa "Halo guys".
 - Akurasi nomor satu: nama error, fungsi, pin, tegangan harus benar. Kalau ragu, jangan diklaim; tulis di qa.perlu_dicek.
 - Pilih seri: "A" (Error Solver: error asli → penyebab → fix → bukti → CTA), "B" (Apa Itu: definisi → analogi → contoh ESP32/Arduino → penutup), atau "Umum".
-- Durasi 30–40 detik = 70–95 kata total. 5–7 adegan, tiap adegan 3–7 detik, waktu nyambung mulai 0.
-- Adegan 1 = hook ≤ 8 kata yang langsung menunjukkan masalah/hasil. Kalimat terakhir sebaiknya menyambung ke awal (loop).
+- Durasi 25–38 detik = 60–90 kata total. 7–9 adegan, tiap adegan 2–5 detik (rata-rata ≤ 4,5; tidak ada yang > 7), waktu nyambung mulai 0.
+- HOOK (adegan 1, 0–2,5 detik): voiceover ≤ 7 kata, teks layar ≤ 5 kata, dan frame pertamanya harus bisa dimengerti tanpa suara. Tunjukkan MASALAH atau HASIL yang bikin penasaran, jangan jawabannya. Dilarang: sapaan, "tahukah kamu", nama channel, basa-basi.
+- Pilih SATU tipe hook dan isi "strategi.hook_tipe" dengan salah satu: "error_langsung" (pesan error asli di layar), "miskonsepsi" ("Banyak yang ngira X. Salah."), "angka" (angka spesifik yang mengganjal), "hasil_dulu" (tunjukkan hasil akhir, cara menyusul), "pertanyaan_relate" (situasi yang pernah dialami pemula). Variasikan tipe antar-video; jangan tiga video berturut-turut dengan tipe yang sama.
+- Buat celah rasa penasaran di hook (open loop) dan bayar sebelum detik 25. Ada pemicu rasa penasaran baru tiap 5–8 detik (mis. "tapi ada satu syarat", "yang bikin kaget:").
+- Kalimat terakhir harus menyambung ke kalimat pertama sehingga video bisa diputar ulang tanpa terasa putus (loop). Contoh: hook "Kenapa serial monitor-mu keluar huruf aneh?" → penutup "…jadi sekarang huruf anehnya hilang."
+- Adegan terakhir (cta) bukan sekadar "komen ya": isi dengan JANJI SERI yang menyebut isi video berikutnya ("Besok: kenapa ESP32 restart sendiri.") atau satu pertanyaan spesifik. Penonton menekan subscribe kalau tahu apa yang akan didapat berikutnya (hipotesis, diuji lewat angka subs per 1000 tayangan).
 - Satu takeaway per video.
 
 ATURAN VISUAL (guidebook motion graphics 1Hertz)
@@ -42,7 +46,7 @@ BENTUK JSON (ikuti persis nama field-nya):
  "tema":"...",
  "status":"siap_produksi",
  "kelayakan":{"keputusan":"lanjut","alasan":"..."},
- "strategi":{"seri":"A","takeaway":"...","target_penonton":"..."},
+ "strategi":{"seri":"A","hook_tipe":"error_langsung|miskonsepsi|angka|hasil_dulu|pertanyaan_relate","takeaway":"...","target_penonton":"..."},
  "naskah":{"voiceover_lengkap":"gabungan semua voiceover","durasi_detik":36},
  "adegan":[
   {"no":1,"mulai":0,"selesai":4,"voiceover":"...","teks_layar":"≤ 6 kata","judul":["baris 1","baris 2"],"warna_judul":"merah","kata_kunci":"satu kata yang ada di voiceover","komponen":"log_serial","data":{...}},
