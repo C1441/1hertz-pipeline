@@ -31,3 +31,4 @@
 | 2026-10-27 06:11 | Dokumen tanpa judul | privat ✅ | 3ncfsc5BHAA | produksi 2.4 menit · ON AIR ✅ |
 | 2026-10-28 10:55 | Dokumen tanpa judul | privat ✅ | -Mt0euRJXNk | produksi 2.0 menit · ON AIR ✅ · hook: ? · ⚠ hook 4.0 dtk (>3), rata-rata adegan 5.7 dtk (>4,5), 1 adegan >7 dtk, strategi.hook_tipe kosong |
 | 2026-10-28 12:02 | Dokumen tanpa judul | privat ✅ | cEzzkAINqR8 | produksi 2.6 menit · ON AIR ✅ · hook: ? · ⚠ hook 4.0 dtk (>3), hook 12 kata (>8), rata-rata adegan 5.1 dtk (>4,5), strategi.hook_tipe kosong |
+| 2026-10-30 07:38 | Dokumen tanpa judul | privat ✅ | _91V60FsyjA | produksi 3.7 menit · ON AIR ✅ · hook: hasil_dulu |
