@@ -8,6 +8,8 @@
     "render": "remotion render src/index.tsx Short1Hertz out/video.mp4"
   },
   "dependencies": {
+    "@fontsource/geist": "^5.3.0",
+    "@fontsource/geist-mono": "^5.3.0",
     "@remotion/cli": "4.0.528",
     "@remotion/layout-utils": "4.0.528",
     "@wokwi/elements": "^1.9.2",

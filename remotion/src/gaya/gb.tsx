@@ -39,9 +39,6 @@ export const Kerangka3: React.FC<{ t: number; tag: string; bab: Bab[]; adegan: A
   const detik = `00:${String(Math.floor(t)).padStart(2, '0')}.${Math.floor((t % 1) * 10)}`;
   return (
     <AbsoluteFill style={{ backgroundColor: K.bg, fontFamily: SANS }}>
-      <AbsoluteFill style={{ backgroundImage: 'radial-gradient(rgba(140,200,230,0.10) 1.6px, transparent 1.8px)', backgroundSize: '36px 36px' }} />
-      <AbsoluteFill style={{ background: 'radial-gradient(ellipse 70% 38% at 50% 45%, rgba(79,227,236,0.07), transparent 70%)' }} />
-      <AbsoluteFill style={{ background: 'radial-gradient(ellipse 120% 80% at 50% 45%, transparent 55%, rgba(0,0,0,0.55))' }} />
       <div style={{ position: 'absolute', top: 64, left: 56, right: 56, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontFamily: MONO, fontSize: 24, fontWeight: 700, letterSpacing: 3, color: K.bg, background: K.cyan, borderRadius: 999, padding: '8px 20px' }}>{tag}</div>
         <div style={{ fontFamily: MONO, fontSize: 24, color: '#5D6B78' }}>@1hertz_lab</div>
@@ -61,11 +58,11 @@ export const Kerangka3: React.FC<{ t: number; tag: string; bab: Bab[]; adegan: A
       })}
       {/* HUD panggung */}
       <svg width={1080} height={1920} style={{ position: 'absolute', inset: 0 }} data-qa="hias">
-        <g stroke="#4FE3EC" strokeOpacity={0.35} strokeWidth={2} fill="none">
+        <g stroke="#C77700" strokeOpacity={0.35} strokeWidth={2} fill="none">
           <path d="M28,380 v-30 h30 M1052,380 v-30 h-30 M28,1380 v30 h30 M1052,1380 v30 h-30" />
         </g>
-        <text x={66} y={372} fontFamily={MONO} fontSize={20} letterSpacing={3} fill="#4FE3EC" fillOpacity={0.45}>{hud}</text>
-        <text x={1014} y={1404} textAnchor="end" fontFamily={MONO} fontSize={20} letterSpacing={2} fill="#4FE3EC" fillOpacity={0.45}>{detik}</text>
+        <text x={66} y={372} fontFamily={MONO} fontSize={20} letterSpacing={3} fill="#C77700" fillOpacity={0.45}>{hud}</text>
+        <text x={1014} y={1404} textAnchor="end" fontFamily={MONO} fontSize={20} letterSpacing={2} fill="#C77700" fillOpacity={0.45}>{detik}</text>
       </svg>
       <div style={{ position: 'absolute', top: 350, left: 0, width: 1080, height: 1060 }}>{children}</div>
       <div style={{ position: 'absolute', top: 1400, width: '100%', textAlign: 'center', fontFamily: MONO, fontSize: 20, letterSpacing: 4, color: '#4A5763' }}>{sumber}</div>
@@ -107,7 +104,6 @@ export const Hantaman: React.FC<{ t: number; a: number; b: number; kata: string;
   const getar = t - a < 0.12 ? Math.sin((t - a) * 120) * 6 : 0;
   return (
     <AbsoluteFill style={{ background: warna === 'cyan' ? K.cyan : K.amber, alignItems: 'center', justifyContent: 'center' }}>
-      <AbsoluteFill style={{ backgroundImage: 'radial-gradient(rgba(12,17,23,0.10) 2px, transparent 2.2px)', backgroundSize: '36px 36px' }} />
       <div style={{ fontFamily: SANS, fontWeight: 900, fontSize: kata.length > 6 ? 200 : 260, letterSpacing: -6, color: K.bg, transform: `translateX(${getar}px) scale(${s})` }}>{kata}</div>
       <div style={{ position: 'absolute', bottom: 520, fontFamily: MONO, fontSize: 24, letterSpacing: 6, color: K.bg, opacity: 0.6 }}>1HERTZ</div>
     </AbsoluteFill>
@@ -133,7 +129,7 @@ export const Sinyal: React.FC<{ t: number; pulsa: number; kelihatan: number; y?:
           </feMerge>
         </filter>
       </defs>
-      <line x1={0} y1={y + 2} x2={1080} y2={y + 2} stroke="#4FE3EC" strokeOpacity={0.12} strokeWidth={1} strokeDasharray="2 70" strokeDashoffset={-geser} />
+      <line x1={0} y1={y + 2} x2={1080} y2={y + 2} stroke="#C77700" strokeOpacity={0.12} strokeWidth={1} strokeDasharray="2 70" strokeDashoffset={-geser} />
       <path d={`M0,${y} H${x0} V${y - tinggi} H${x0 + 140} V${y} H1080`} fill="none" stroke={K.cyan} strokeWidth={5} strokeLinejoin="round" filter="url(#pendarSinyal)" />
     </svg>
   );
@@ -147,7 +143,7 @@ export const Kursor: React.FC<{ x: number; y: number; klik?: number; t: number; 
     <g transform={`translate(${x},${y})`} opacity={kelihatan}>
       {d >= 0 && d < 0.45 && <circle r={18 + d * 120} fill="none" stroke={K.cyan} strokeWidth={4 * (1 - d / 0.45)} opacity={1 - d / 0.45} />}
       <g transform={`scale(${1.3 * tekan})`}>
-        <path d="M0,0 L0,34 L9,26 L16,41 L22,38 L15,24 L27,24 Z" fill="#fff" stroke="#0C1117" strokeWidth={2.5} strokeLinejoin="round" />
+        <path d="M0,0 L0,34 L9,26 L16,41 L22,38 L15,24 L27,24 Z" fill="#fff" stroke="#151D26" strokeWidth={2.5} strokeLinejoin="round" />
       </g>
     </g>
   );

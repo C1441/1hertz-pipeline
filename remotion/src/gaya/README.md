@@ -23,3 +23,11 @@ Arsip:
 - `src/aset/prototipe/` — prototipe yang dipakai menyusun guidebook.
 
 Contoh JSON: `src/contoh-konten-baud.json` (fitur baru), `src/contoh-konten.json` (format lama).
+
+## Gaya UI motion (30 Okt 2026)
+- Palet: #151D26 kanvas, #22303C kartu, #3A4754 garis, #5D6B78 teks redup, #C77700 aksen, teks putih. Hijau/merah hanya untuk status log.
+- Font: Geist (teks) dan Geist Mono (kode), dari paket `@fontsource`, jadi render tidak perlu internet.
+- Gerak: pegas teredam dalam bentuk tertutup (`naik`, `pop` di `pustaka.tsx`), lonjakan kurang dari 1% untuk `naik`, sekitar 3% untuk `pop`.
+- Ganti judul: blur masuk dan keluar, bukan sekadar geser.
+- Hantaman: kartu gelap #22303C dengan kata aksen oranye, bukan layar penuh warna.
+- Kursor (`KursorSvg`): berjalan lewat titik-titik dengan easing, menekan saat klik. Dipakai di adegan CTA.

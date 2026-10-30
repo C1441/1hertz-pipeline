@@ -3,6 +3,14 @@
 import React from 'react';
 import { AbsoluteFill, interpolate, Easing } from 'remotion';
 import '@wokwi/elements';
+// Geist (satu keluarga huruf untuk seluruh UI, termasuk mono) — paket lokal, tidak butuh internet saat render
+import '@fontsource/geist/400.css';
+import '@fontsource/geist/500.css';
+import '@fontsource/geist/600.css';
+import '@fontsource/geist/700.css';
+import '@fontsource/geist/800.css';
+import '@fontsource/geist-mono/400.css';
+import '@fontsource/geist-mono/700.css';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -14,31 +22,75 @@ declare global {
 }
 
 /* ---------------- token ---------------- */
+// Palet UI 1Hertz (versi motion UI): #151D26 kanvas, #22303C kartu, #3A4754 garis, #5D6B78 teks redup, #C77700 aksen.
+// Putih dipakai untuk teks utama (palet tidak punya terang). ok/err hanya untuk status log (hijau/merah fungsional).
 export const K = {
-  bg: '#0C1117',
-  band: '#06090C',
-  text: '#EEF3F6',
-  dim: '#8B9AA6',
-  redup: '#56636F',
-  garis: '#24303A',
-  card: 'rgba(17,25,34,0.95)',
-  cyan: '#4FE3EC',
-  amber: '#FFB547',
+  bg: '#151D26',
+  band: '#151D26',
+  text: '#FFFFFF',
+  dim: '#5D6B78',
+  redup: '#3A4754',
+  garis: '#3A4754',
+  card: '#22303C',
+  cyan: '#C77700', // highlight utama (dulu cyan)
+  amber: '#C77700', // aksen peringatan
   ok: '#45D99A',
   err: '#FF6B6B',
 };
-export const SANS = 'Inter, "DejaVu Sans", sans-serif';
-export const MONO = '"JetBrains Mono", "DejaVu Sans Mono", monospace';
+export const SANS = 'Geist, sans-serif';
+export const MONO = '"Geist Mono", monospace';
 export type Warna = 'cyan' | 'amber' | 'ok' | 'err' | 'dim' | 'text';
 export const w = (x?: Warna) => (x ? (K as any)[x] : K.text);
 
 export const ease = Easing.bezier(0.22, 1, 0.36, 1);
 export const C = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
-export const naik = (t: number, a: number, d = 0.35) => interpolate(t, [a, a + d], [0, 1], { ...C, easing: ease });
-export const pop = (t: number, a: number, d = 0.3) => interpolate(t, [a, a + d], [0, 1], { ...C, easing: Easing.out(Easing.back(1.8)) });
+/** pegas teredam sebagai fungsi waktu murni (respons langkah, tanpa state). zeta 0.85 ≈ lonjakan <1%. */
+const pegas = (tau: number, zeta: number, d: number) => {
+  if (tau <= 0) return 0;
+  const w = 4 / (zeta * d); // waktu turun ke 2% ≈ d detik
+  const wd = w * Math.sqrt(1 - zeta * zeta);
+  return 1 - Math.exp(-zeta * w * tau) * (Math.cos(wd * tau) + (zeta / Math.sqrt(1 - zeta * zeta)) * Math.sin(wd * tau));
+};
+/** masuk dengan pegas (zeta 0.85, hampir tanpa lonjakan) */
+export const naik = (t: number, a: number, d = 0.35) => pegas(t - a, 0.85, d);
+/** sedikit lonjakan (zeta 0.75 ≈ 3%) untuk aksen kecil seperti ikon dan pill */
+export const pop = (t: number, a: number, d = 0.3) => pegas(t - a, 0.75, d);
 /** 0→1→0 di [a,b]; a = 0 berarti langsung tampil di frame pertama */
 export const jendela = (t: number, a: number, b: number, d = 0.25) =>
   a === 0 ? interpolate(t, [b - d, b], [1, 0], C) : interpolate(t, [a, a + d, b - d, b], [0, 1, 1, 0], C);
+
+/** Kursor SVG: berjalan lewat titik-titik (easing in-out), lalu menekan (scale turun-naik) saat klik. */
+export type TitikKursor = { t: number; x: number; y: number; klik?: boolean };
+export const KursorSvg: React.FC<{ lt: number; jejak: TitikKursor[] }> = ({ lt, jejak }) => {
+  if (!jejak.length) return null;
+  let x = jejak[0].x;
+  let y = jejak[0].y;
+  for (let i = 1; i < jejak.length; i++) {
+    const a = jejak[i - 1];
+    const b = jejak[i];
+    if (lt <= a.t) break;
+    if (lt < b.t) {
+      const u = Easing.inOut(Easing.cubic)((lt - a.t) / (b.t - a.t));
+      x = a.x + (b.x - a.x) * u;
+      y = a.y + (b.y - a.y) * u;
+      break;
+    }
+    x = b.x;
+    y = b.y;
+  }
+  const klik = jejak.find((k) => k.klik);
+  let tekan = 1;
+  if (klik && lt >= klik.t) {
+    const dk = lt - klik.t;
+    tekan = 1 - 0.14 * Math.sin(Math.min(dk, 0.18) / 0.18 * Math.PI) * (dk < 0.18 ? 1 : 0);
+  }
+  const muncul = jejak.length && lt >= jejak[0].t - 0.2 ? Math.min(1, (lt - (jejak[0].t - 0.2)) / 0.2) : 0;
+  return (
+    <g opacity={muncul} transform={`translate(${x},${y}) scale(${tekan})`}>
+      <path d="M0,0 L0,34 L9,26 L16,41 L22,38 L15,24 L27,24 Z" fill="#FFFFFF" stroke="#151D26" strokeWidth={2.5} strokeLinejoin="round" />
+    </g>
+  );
+};
 
 /* ---------------- kerangka video ---------------- */
 export type Judul = { a: number; b: number; l1: string; l2: string; warna: Warna };
@@ -53,9 +105,7 @@ export const Kerangka: React.FC<{ t: number; tag: string; judul: Judul[]; adegan
   children,
 }) => (
   <AbsoluteFill style={{ backgroundColor: K.bg, fontFamily: SANS }}>
-    <AbsoluteFill style={{ backgroundImage: 'radial-gradient(rgba(140,200,230,0.10) 1.6px, transparent 1.8px)', backgroundSize: '36px 36px' }} />
-    <AbsoluteFill style={{ background: 'radial-gradient(ellipse 70% 38% at 50% 42%, rgba(79,227,236,0.07), transparent 70%)' }} />
-    <AbsoluteFill style={{ background: 'radial-gradient(ellipse 120% 80% at 50% 45%, transparent 55%, rgba(0,0,0,0.55))' }} />
+    {/* kanvas datar: tanpa glow dan tanpa gradien di chrome UI */}
     <div style={{ position: 'absolute', top: 64, left: 56, right: 56, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <div style={{ fontFamily: MONO, fontSize: 24, fontWeight: 700, letterSpacing: 3, color: K.bg, background: K.cyan, borderRadius: 999, padding: '8px 20px' }}>{tag}</div>
       <div style={{ fontFamily: MONO, fontSize: 24, color: '#5D6B78' }}>@1hertz_lab</div>
@@ -65,7 +115,7 @@ export const Kerangka: React.FC<{ t: number; tag: string; judul: Judul[]; adegan
       if (op <= 0) return null;
       const geser = j.a === 0 ? 0 : (1 - naik(t, j.a, 0.4)) * 24;
       return (
-        <div key={i} style={{ position: 'absolute', top: 150, width: '100%', textAlign: 'center', opacity: op, transform: `translateY(${geser}px)` }}>
+        <div key={i} style={{ position: 'absolute', top: 150, width: '100%', textAlign: 'center', opacity: op, transform: `translateY(${geser}px)`, filter: `blur(${j.a === 0 ? 0 : (1 - naik(t, j.a, 0.3)) * 10}px)` }}>
           <div style={{ fontSize: 72, fontWeight: 800, color: K.text, letterSpacing: -1.5, lineHeight: 1.08 }}>{j.l1}</div>
           <div style={{ fontSize: 72, fontWeight: 800, color: w(j.warna), letterSpacing: -1.5, lineHeight: 1.08 }}>{j.l2}</div>
         </div>
@@ -366,11 +416,11 @@ export const Jendela: React.FC<{ t: number; x: number; y: number; lebar: number;
       <g filter="url(#bayang)">
         <rect width={lebar} height={tinggiTotal} rx={20} fill={gaya === 'terminal' ? '#080C10' : '#151D26'} />
       </g>
-      <rect width={lebar} height={tinggiTotal} rx={20} fill="none" stroke="#2E3B48" strokeWidth={3} />
+      <rect width={lebar} height={tinggiTotal} rx={20} fill="none" stroke="#3A4754" strokeWidth={3} />
       <rect width={lebar} height={64} rx={20} fill="#1D2731" />
       <rect y={44} width={lebar} height={20} fill="#1D2731" />
       {[0, 1, 2].map((i) => (
-        <circle key={i} cx={32 + i * 30} cy={32} r={9} fill={['#FF6B6B', '#FFB547', '#45D99A'][i]} opacity={0.85} />
+        <circle key={i} cx={32 + i * 30} cy={32} r={9} fill={['#FF6B6B', '#C77700', '#45D99A'][i]} opacity={0.85} />
       ))}
       <text x={lebar / 2} y={42} textAnchor="middle" fontFamily={SANS} fontSize={26} fontWeight={600} fill={K.dim}>
         {judul}

@@ -68,3 +68,11 @@ BENTUK JSON (ikuti persis nama field-nya):
 }
 
 TEMA:
+
+## GAYA MOTION GRAFIK (berlaku mulai 30 Okt 2026)
+- Satu gagasan per adegan. Kalau adegan butuh dua ide, pecah jadi dua adegan.
+- Pilih komponen yang menjelaskan mekanisme: log_serial untuk gejala, garis_waktu untuk urutan kerja, diagram untuk alur, lembar untuk perbandingan, cta untuk ajakan komentar.
+- Tombol/aksi di adegan CTA dipakai untuk menggambarkan ajakan (kursor menekan tombol). Jangan memasang kursor di adegan lain tanpa alasan.
+- Teks layar pendek (maks 6 kata). Kalimat panjang ada di voiceover, bukan di layar.
+- Hantaman maksimal 3 per video dan harus sejalan dengan kata pembuka narasi (lihat aturan jembatan).
+- Warna: latar #151D26, kartu #22303C, aksen #C77700 untuk hal yang penting saja, teks putih, teks sekunder #5D6B78. Jangan memakai warna di luar palet ini, kecuali hijau/merah untuk status log.

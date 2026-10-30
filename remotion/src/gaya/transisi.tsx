@@ -192,8 +192,8 @@ export const TitikCahaya: React.FC<{ x: number; y: number; besar: number; op: nu
         <radialGradient id="titikG">
           <stop offset="0%" stopColor="#FFFFFF" stopOpacity={1} />
           <stop offset="18%" stopColor="#A6F6FA" stopOpacity={0.95} />
-          <stop offset="50%" stopColor="#4FE3EC" stopOpacity={0.35} />
-          <stop offset="100%" stopColor="#4FE3EC" stopOpacity={0} />
+          <stop offset="50%" stopColor="#C77700" stopOpacity={0.35} />
+          <stop offset="100%" stopColor="#C77700" stopOpacity={0} />
         </radialGradient>
       </defs>
       <g opacity={op}>
@@ -245,7 +245,7 @@ export const Hantaman2: React.FC<{
               <feGaussianBlur stdDeviation={`${Math.max(0, blurX + (1 - pin) * 18)} ${(1 - pin) * 6}`} />
             </filter>
           </svg>
-          <AbsoluteFill style={{ background: isi, transform: tf, filter: `url(#${id})` }}>
+          <AbsoluteFill style={{ background: K.card, transform: tf, filter: `url(#${id})` }}>
             {/* kata berulang berlapis di latar */}
             {Array.from({ length: 9 }, (_, r) => {
               const arah = r % 2 ? 1 : -1;
@@ -264,7 +264,7 @@ export const Hantaman2: React.FC<{
                     fontSize: 190,
                     letterSpacing: -4,
                     color: 'transparent',
-                    WebkitTextStroke: `2px rgba(12,17,23,${0.16 + 0.1 * (1 - pin)})`,
+                    WebkitTextStroke: `2px rgba(199,119,0,${0.22 + 0.1 * (1 - pin)})`,
                     opacity: Math.min(1, pin * 2),
                   }}
                 >
@@ -285,7 +285,7 @@ export const Hantaman2: React.FC<{
                     y1={960 + Math.sin(sudut) * r0}
                     x2={540 + Math.cos(sudut) * r1}
                     y2={960 + Math.sin(sudut) * r1}
-                    stroke={K.bg}
+                    stroke={isi}
                     strokeWidth={3 + acak(i * 7) * 4}
                     strokeLinecap="round"
                     opacity={(1 - pin) * 0.7}
@@ -295,17 +295,17 @@ export const Hantaman2: React.FC<{
             </svg>
             <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
               {[0.3, 0.16].map((o, i) => (
-                <div key={i} data-qa="hias" style={{ position: 'absolute', fontFamily: SANS, fontWeight: 900, fontSize: besar, letterSpacing: -6, color: K.bg, opacity: o * (1 - pin), transform: `scale(${s * (1.12 + i * 0.12)})` }}>
+                <div key={i} data-qa="hias" style={{ position: 'absolute', fontFamily: SANS, fontWeight: 900, fontSize: besar, letterSpacing: -6, color: isi, opacity: o * (1 - pin), transform: `scale(${s * (1.12 + i * 0.12)})` }}>
                   {kata}
                 </div>
               ))}
-              <div style={{ fontFamily: SANS, fontWeight: 900, fontSize: besar, letterSpacing: -6, color: K.bg, transform: `scale(${s})` }}>{kata}</div>
+              <div style={{ fontFamily: SANS, fontWeight: 900, fontSize: besar, letterSpacing: -6, color: isi, transform: `scale(${s})` }}>{kata}</div>
             </AbsoluteFill>
-            <div style={{ position: 'absolute', bottom: 520, width: '100%', textAlign: 'center', fontFamily: MONO, fontSize: 24, letterSpacing: 6, color: K.bg, opacity: 0.6 }}>1HERTZ</div>
+            <div style={{ position: 'absolute', bottom: 520, width: '100%', textAlign: 'center', fontFamily: MONO, fontSize: 24, letterSpacing: 6, color: K.dim, opacity: 0.9 }}>1HERTZ</div>
           </AbsoluteFill>
         </AbsoluteFill>
       )}
-      {kilat > 0 && <AbsoluteFill style={{ background: '#FFFFFF', opacity: kilat }} />}
+      {kilat > 0 && <AbsoluteFill style={{ background: '#FFFFFF', opacity: kilat * 0.35 }} />}
     </>
   );
 };

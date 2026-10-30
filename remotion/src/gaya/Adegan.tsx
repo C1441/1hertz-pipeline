@@ -2,7 +2,7 @@
 // Tiap adegan menerima: lt = detik sejak adegan mulai, d = durasi adegan, data = isi JSON.
 import React from 'react';
 import { interpolate, Easing } from 'remotion';
-import { K, SANS, MONO, naik, pop, Svg, Ikon, Pill } from './pustaka';
+import { K, SANS, MONO, naik, pop, Svg, Ikon, Pill, KursorSvg } from './pustaka';
 import { C } from './gb';
 import { acak } from './transisi';
 import { ukuranPas, lebarTeks, potong, catatPotong, susunTeks, bungkusLebar } from './ukur';
@@ -135,7 +135,7 @@ export const LogSerial: React.FC<PropsAdegan> = ({ lt, d, data }) => {
         <g filter="url(#bayang)">
           <rect width={L} height={h} rx={18} fill="#0A0E12" />
         </g>
-        <rect width={L} height={h} rx={18} fill="none" stroke="#2E3B48" strokeWidth={3} />
+        <rect width={L} height={h} rx={18} fill="none" stroke="#3A4754" strokeWidth={3} />
         <rect width={L} height={74} rx={18} fill="#151D26" />
         <rect y={56} width={L} height={18} fill="#151D26" />
         <text x={30} y={48} fontFamily={SANS} fontWeight={600} fontSize={ukuranPas(String(data?.judul || 'Serial Monitor'), 28, 640, SANS, 600, 0, 18)} fill={K.text}>
@@ -195,11 +195,11 @@ export const KartuKode: React.FC<PropsAdegan> = ({ lt, d, data }) => {
         <g filter="url(#bayang)">
           <rect width={1000} height={h} rx={18} fill="#0A0E12" />
         </g>
-        <rect width={1000} height={h} rx={18} fill="none" stroke="#2E3B48" strokeWidth={3} />
+        <rect width={1000} height={h} rx={18} fill="none" stroke="#3A4754" strokeWidth={3} />
         <rect width={1000} height={70} rx={18} fill="#151D26" />
         <rect y={52} width={1000} height={18} fill="#151D26" />
         {[0, 1, 2].map((i) => (
-          <circle key={i} cx={34 + i * 30} cy={35} r={9} fill={['#FF6B6B', '#FFB547', '#45D99A'][i]} opacity={0.85} />
+          <circle key={i} cx={34 + i * 30} cy={35} r={9} fill={['#FF6B6B', '#C77700', '#45D99A'][i]} opacity={0.85} />
         ))}
         <text x={500} y={45} textAnchor="middle" fontFamily={MONO} fontSize={24} fill={K.dim}>{`main.${ext}`}</text>
         {baris.map((b, i) => {
@@ -277,7 +277,7 @@ export const KartuStatus: React.FC<PropsAdegan> = ({ lt, d, data }) => {
       </g>
       {urutan.map((u, k) => (
         <g key={k} opacity={k <= i ? 1 : 0.25}>
-          <circle cx={540 + (k - (n - 1) / 2) * 60} cy={cy + R + 260} r={11} fill={k <= i ? warnaNama(warna[k]) : '#2E3B48'} />
+          <circle cx={540 + (k - (n - 1) / 2) * 60} cy={cy + R + 260} r={11} fill={k <= i ? warnaNama(warna[k]) : '#3A4754'} />
         </g>
       ))}
     </Svg>
@@ -287,7 +287,7 @@ export const KartuStatus: React.FC<PropsAdegan> = ({ lt, d, data }) => {
 /* ================================================================== */
 /* x_vs_y — lembar datasheet terang, dua kolom                          */
 /* ================================================================== */
-const INK = '#0C1117';
+const INK = '#151D26';
 export const XvsY: React.FC<PropsAdegan> = ({ lt, d, data }) => {
   const kiri = data?.kiri ?? {};
   const kanan = data?.kanan ?? {};
@@ -327,7 +327,7 @@ export const XvsY: React.FC<PropsAdegan> = ({ lt, d, data }) => {
             <g key={i} opacity={k} transform={`translate(${(1 - k) * -24},0)`}>
               <circle cx={x + 10} cy={yBaris[i] + 16 - (33 - u) * 0.4} r={8} fill={warna} />
               {bar.map((b, jj) => (
-                <text key={jj} x={x + 34} y={yBaris[i] + 26 + jj * u * 1.22} fontFamily={SANS} fontWeight={600} fontSize={u} fill={INK}>
+                <text key={jj} x={x + 34} y={yBaris[i] + 26 + jj * u * 1.22} fontFamily={SANS} fontWeight={600} fontSize={u} fill="#FFFFFF">
                   {b}
                 </text>
               ))}
@@ -340,21 +340,21 @@ export const XvsY: React.FC<PropsAdegan> = ({ lt, d, data }) => {
   return (
     <Svg>
       <g filter="url(#bayang)">
-        <rect x={50} y={30} width={980} height={960} rx={16} fill="#EEF1EC" />
+        <rect x={50} y={30} width={980} height={960} rx={16} fill={K.card} />
       </g>
       {Array.from({ length: 17 }, (_, i) => (
         <line key={i} x1={50} y1={150 + i * 50} x2={1030} y2={150 + i * 50} stroke="#DDE3DC" strokeWidth={1.5} />
       ))}
       <rect x={50} y={30} width={980} height={110} rx={16} fill={INK} />
       <rect x={50} y={110} width={980} height={30} fill={INK} />
-      <text x={90} y={104} fontFamily={SANS} fontWeight={900} fontSize={50} fill="#EEF1EC">LEMBAR</text>
-      <text x={330} y={92} fontFamily={MONO} fontWeight={700} fontSize={24} letterSpacing={4} fill="#EEF1EC">BANDINGKAN</text>
+      <text x={90} y={104} fontFamily={SANS} fontWeight={900} fontSize={50} fill="#FFFFFF">LEMBAR</text>
+      <text x={330} y={92} fontFamily={MONO} fontWeight={700} fontSize={24} letterSpacing={4} fill="#FFFFFF">BANDINGKAN</text>
       <line x1={540} y1={200} x2={540} y2={950} stroke="#C9D1C8" strokeWidth={2} />
       <Kolom x={90} judul={kiri.judul} baris={bk} warna="#0E8F99" mulai={0.25} />
       <Kolom x={570} judul={kanan.judul} baris={bn} warna="#C77700" mulai={0.25 + step} />
       <g transform={`translate(540,212) scale(${pop(lt, 0.3)})`}>
         <circle r={36} fill={INK} />
-        <text y={12} textAnchor="middle" fontFamily={SANS} fontWeight={900} fontSize={30} fill="#EEF1EC">VS</text>
+        <text y={12} textAnchor="middle" fontFamily={SANS} fontWeight={900} fontSize={30} fill="#FFFFFF">VS</text>
       </g>
     </Svg>
   );
@@ -386,7 +386,7 @@ export const Diagram: React.FC<PropsAdegan> = ({ lt, d, data }) => {
           <g key={i} opacity={0.35 + 0.65 * masuk}>
             {i > 0 && (
               <g>
-                <line x1={540} y1={y - gap} x2={540} y2={y} stroke="#2E3B48" strokeWidth={4} />
+                <line x1={540} y1={y - gap} x2={540} y2={y} stroke="#3A4754" strokeWidth={4} />
                 {lt > tAktif(i) - 0.35 && lt < tAktif(i) && (
                   <circle cx={540} cy={y - gap + gap * ((lt - (tAktif(i) - 0.35)) / 0.35)} r={11} fill="#fff" filter="url(#pendar)" />
                 )}
@@ -394,7 +394,7 @@ export const Diagram: React.FC<PropsAdegan> = ({ lt, d, data }) => {
               </g>
             )}
             <g filter={aktif ? undefined : undefined}>
-              <rect x={150} y={y} width={780} height={hKotak} rx={18} fill={aktif ? 'rgba(79,227,236,0.10)' : K.card} stroke={aktif ? K.cyan : '#2E3B48'} strokeWidth={aktif ? 3 + (sekarang ? 2 * k : 0) : 2} />
+              <rect x={150} y={y} width={780} height={hKotak} rx={18} fill={aktif ? 'rgba(199,119,0,0.10)' : K.card} stroke={aktif ? K.cyan : '#3A4754'} strokeWidth={aktif ? 3 + (sekarang ? 2 * k : 0) : 2} />
             </g>
             {sekarang && <rect x={150} y={y} width={780} height={hKotak} rx={18} fill="none" stroke={K.cyan} strokeWidth={8} opacity={0.35} filter="url(#pendar)" />}
             <text x={190} y={y + 46} fontFamily={MONO} fontSize={22} letterSpacing={3} fill={aktif ? K.cyan : '#4A5763'}>
@@ -473,7 +473,7 @@ export const Bukti: React.FC<PropsAdegan> = ({ lt, data, teks }) => {
       <g filter="url(#bayang)">
         <rect x={60} y={120} width={960} height={500} rx={18} fill="#070B0E" />
       </g>
-      <rect x={60} y={120} width={960} height={500} rx={18} fill="none" stroke="#2E3B48" strokeWidth={3} />
+      <rect x={60} y={120} width={960} height={500} rx={18} fill="none" stroke="#3A4754" strokeWidth={3} />
       {Array.from({ length: 9 }, (_, i) => (
         <line key={`v${i}`} x1={60 + (i + 1) * 96} y1={130} x2={60 + (i + 1) * 96} y2={610} stroke="#132029" strokeWidth={2} />
       ))}
@@ -511,6 +511,7 @@ export const Cta: React.FC<PropsAdegan> = ({ lt, data, teks }) => {
           <text x={540} y={240} textAnchor="middle" fontFamily={MONO} fontSize={26} letterSpacing={6} fill={K.cyan}>KOMENTAR</text>
         </g>
         <Pill t={lt} a={Math.max(0.8, 0.4 + baris.join(' ').split(' ').length * 0.07)} x={540} y={880} teks="Tulis di komentar ↓" />
+        <KursorSvg lt={lt} jejak={[{ t: 0.5, x: 260, y: 1010 }, { t: 1.3, x: 540, y: 880, klik: true }]} />
       </Svg>
       <div style={{ position: 'absolute', top: 290, left: 130, right: 130 }}>
         <TeksKinetik lt={lt} mulai={0.25} baris={baris} ukuran={uk} />
@@ -751,19 +752,19 @@ export const Lembar: React.FC<PropsAdegan> = ({ lt, d, data }) => {
   return (
     <Svg>
       <g filter="url(#bayang)">
-        <rect x={50} y={30} width={980} height={960} rx={16} fill="#EEF1EC" />
+        <rect x={50} y={30} width={980} height={960} rx={16} fill={K.card} />
       </g>
       {Array.from({ length: 17 }, (_, i) => (
         <line key={i} x1={50} y1={150 + i * 50} x2={1030} y2={150 + i * 50} stroke="#DDE3DC" strokeWidth={1.5} />
       ))}
       <rect x={50} y={30} width={980} height={110} rx={16} fill={INK} />
       <rect x={50} y={110} width={980} height={30} fill={INK} />
-      <text x={KI} y={102} fontFamily={SANS} fontWeight={900} fontSize={fKode} fill="#EEF1EC">{kode}</text>
-      {judul && <text x={990} y={sub ? 80 : 94} textAnchor="end" fontFamily={MONO} fontWeight={700} fontSize={fJudul} letterSpacing={3} fill="#EEF1EC">{judul}</text>}
-      {sub && <text x={990} y={112} textAnchor="end" fontFamily={MONO} fontSize={fSub} letterSpacing={2} fill="#8B9AA6">{sub}</text>}
-      <text x={KI} y={210} fontFamily={MONO} fontSize={22} letterSpacing={3} fill="#5A6670">{potong(String(kolom[0] ?? '').toUpperCase(), 26, 'lembar kolom')}</text>
-      <text x={KA} y={210} textAnchor="end" fontFamily={MONO} fontSize={22} letterSpacing={3} fill="#5A6670">{potong(String(kolom[1] ?? '').toUpperCase(), 20, 'lembar kolom')}</text>
-      <line x1={KI} y1={228} x2={990} y2={228} stroke={INK} strokeWidth={2} />
+      <text x={KI} y={102} fontFamily={SANS} fontWeight={900} fontSize={fKode} fill="#FFFFFF">{kode}</text>
+      {judul && <text x={990} y={sub ? 80 : 94} textAnchor="end" fontFamily={MONO} fontWeight={700} fontSize={fJudul} letterSpacing={3} fill="#FFFFFF">{judul}</text>}
+      {sub && <text x={990} y={112} textAnchor="end" fontFamily={MONO} fontSize={fSub} letterSpacing={2} fill="#5D6B78">{sub}</text>}
+      <text x={KI} y={210} fontFamily={MONO} fontSize={22} letterSpacing={3} fill={K.dim}>{potong(String(kolom[0] ?? '').toUpperCase(), 26, 'lembar kolom')}</text>
+      <text x={KA} y={210} textAnchor="end" fontFamily={MONO} fontSize={22} letterSpacing={3} fill={K.dim}>{potong(String(kolom[1] ?? '').toUpperCase(), 20, 'lembar kolom')}</text>
+      <line x1={KI} y1={228} x2={990} y2={228} stroke={K.dim} strokeWidth={2} />
       {baris.map((b, i) => {
         const a = 0.25 + i * step;
         const k = naik(lt, a, 0.35);
@@ -783,7 +784,7 @@ export const Lembar: React.FC<PropsAdegan> = ({ lt, d, data }) => {
         const fKet = ukuranPas(ket, 28, KA - KI - Math.max(lNilai, lCatatan) - 36, SANS, 400, 0, 18);
         return (
           <g key={i} opacity={k} transform={`translate(${(1 - k) * -40},0)`}>
-            <text x={KI} y={y} fontFamily={SANS} fontWeight={800} fontSize={fNama} fill={INK}>{nama}</text>
+            <text x={KI} y={y} fontFamily={SANS} fontWeight={800} fontSize={fNama} fill="#FFFFFF">{nama}</text>
             <text x={KI} y={y + 48} fontFamily={SANS} fontSize={fKet} fill="#45525C">{ket}</text>
             <text x={KA} y={y + 12} textAnchor="end" fontFamily={MONO} fontWeight={800} fontSize={fNilai} fill={w}>{tampil}</text>
             {catatan && (
@@ -794,7 +795,7 @@ export const Lembar: React.FC<PropsAdegan> = ({ lt, d, data }) => {
         );
       })}
       {data?.sumber && (
-        <text x={KI} y={950} fontFamily={MONO} fontSize={ukuranPas(`Sumber: ${potong(data.sumber, 80, 'lembar sumber')}`, 20, 830, MONO, 400, 0, 14)} fill="#5A6670" opacity={naik(lt, 0.3 + baris.length * step)}>
+        <text x={KI} y={950} fontFamily={MONO} fontSize={ukuranPas(`Sumber: ${potong(data.sumber, 80, 'lembar sumber')}`, 20, 830, MONO, 400, 0, 14)} fill={K.dim} opacity={naik(lt, 0.3 + baris.length * step)}>
           {`Sumber: ${String(data.sumber).slice(0, 80)}`}
         </text>
       )}
