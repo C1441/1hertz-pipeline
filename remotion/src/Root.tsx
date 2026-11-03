@@ -4,6 +4,7 @@ import { Short1Hertz } from './Short1Hertz';
 import { Short1Hertz as Short1HertzLama } from './aset/template-lama/Short1Hertz';
 import contoh from './contoh-konten.json';
 import { Panjang1Hertz, linimasaKira } from './Panjang1Hertz';
+import { Proto15 } from './Proto15';
 import contohPanjang from './contoh-panjang-mikrokontroler.json';
 
 export const FPS = 30;
@@ -43,6 +44,7 @@ export const Root: React.FC = () => {
           return { durationInFrames: Math.max(1, Math.round(akhir * FPS)) };
         }}
       />
+      <Composition id="Proto15" component={Proto15} width={1080} height={1920} fps={FPS} durationInFrames={450} />
       {/* Template lama (arsip), tidak dipakai pipeline */}
       <Composition
         id="Short1HertzLama"
